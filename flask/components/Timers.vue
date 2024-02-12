@@ -22,8 +22,8 @@
 
 <script setup>
 import { ref, computed, onBeforeMount, onMounted, watch } from "vue";
-import { sendPenalty } from "/assets/webAppAPI.js";
-import { TypeStates, GameStates, PlayerStates } from "/assets/states.js";
+import { sendPenalty } from "~/assets/webAppAPI.js";
+import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
 
 // ##################
 // #####  VARS  #####
@@ -101,7 +101,7 @@ watch(
       }
     }
     else {
-
+      console.log(`${componentName.value} ignored ${newValue}`);
     }
   }
 );

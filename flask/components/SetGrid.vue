@@ -49,8 +49,8 @@
 
 <script setup>
 import { ref, computed, onBeforeMount, onMounted, watch } from "vue";
-import { getGame } from "/assets/webAppAPI.js";
-import { TypeStates, GameStates, PlayerStates } from "/assets/states.js";
+import { getGame } from "~/assets/webAppAPI.js";
+import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
 
 // ##################
 // #####  VARS  #####
@@ -110,7 +110,7 @@ watch(
       await loadGame(false);
     }
     else {
-
+      console.log(`${newValue} not handled`);
     }
   }
 );
@@ -162,7 +162,7 @@ const cardHandler = async (ev) => {
     }
   }
   else {
-
+    console.log(`${ev.action} not handled`);
   }
 
   if (cardsEvent.value.event == 'untoggle-request') {
@@ -188,12 +188,9 @@ const updatePlayerStateHandler = (ev) => {
     penalisedPlayer.value = props.selectedPlayer;
     return { status: true };
   }
-  else if (ev.data.action == 'player-penalty') {
+  if (ev.data.action == 'player-penalty') {
     penalisedPlayer.value = '';
     return { status: true };
-  }
-  else {
-
   }
 
   const from = [...ev.from];

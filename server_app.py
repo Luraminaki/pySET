@@ -15,6 +15,7 @@ import argparse
 import logging
 from pathlib import Path
 
+from flask_cors import CORS
 from flask import Flask
 from view_model_app import ViewModelApp as ViewModel
 
@@ -49,6 +50,8 @@ def create_app(config: str='config.json', scheme: str='https://', subdomain: str
     app.secret_key = os.urandom(32).hex()
     app.register_error_handler(404, TemplateView.not_found)
 
+    CORS(app)
+
     TemplateView.register(app)
     AppView.api_class = ViewModel(conf, scheme, subdomain)
     AppView.register(app, route_prefix='/api/app')
@@ -63,7 +66,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     APP = create_app(args.configuration, scheme='http://', subdomain='localhost')
-    APP.run(host='localhost', port=5000, threaded=True)#, debug=True)
-
-    # APP = create_app(args.configuration, scheme='https://', subdomain='localhost')
-    # APP.run(host='localhost', port=5000, threaded=True, ssl_context='adhoc')
+    APP.run(host='localhost', port=5000, threaded=True)

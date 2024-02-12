@@ -3,8 +3,8 @@
   <b-accordion>
     <b-accordion-item v-for="val in props.playersStats" :key="val.name" :title="val.name">
       <p>Player: {{ val.name }}</p>
-      <p>Type: {{ val.is_IA ? "IA" : "Human" }}</p>
-      <p v-if="val.is_IA">Difficulty: {{ val.difficulty.level.toUpperCase() }}</p>
+      <p>Type: {{ val.is_ai ? "AI" : "Human" }}</p>
+      <p v-if="val.is_ai">Difficulty: {{ val.difficulty.level.toUpperCase() }}</p>
       <p>Submited: {{ val.calls }}</p>
       <p>Valid submit: {{ val.number_valid_sets }}</p>
       <p>Failed submit: {{ val.number_invalid_sets }}</p>
@@ -53,6 +53,3 @@ const updateGenericModalMessage = (ev) => {
   modalGenericMessage.value = ev;
 };
 </script>
-
-<style scoped>
-</style>

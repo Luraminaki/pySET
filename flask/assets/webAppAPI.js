@@ -1,4 +1,4 @@
-import { attempt } from "/assets/helpers.js";
+import { attempt } from "~/assets/helpers.js";
 
 export async function changeGameState(modalGenericMessage, stateBody) {
   const resp = await attempt("app/change_game_state", stateBody, "POST");

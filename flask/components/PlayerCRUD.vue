@@ -36,8 +36,8 @@
 
 <script setup>
 import { ref, computed, onBeforeMount, onMounted } from "vue";
-import { removePlayer, addPlayer } from "/assets/webAppAPI.js";
-import { TypeStates, GameStates, PlayerStates } from "/assets/states.js";
+import { removePlayer, addPlayer } from "~/assets/webAppAPI.js";
+import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
 
 // ##################
 // #####  VARS  #####
@@ -66,7 +66,7 @@ const disableAdd = computed(() => (props.gameState.name != GameStates.NEW.name |
                                    props.playerState.name == PlayerStates.LOCKED.name));
 
 const playerName = ref('');
-const validPlayerName = computed(() => (playerName.value.length > 2 ? true : false));
+const validPlayerName = computed(() => (playerName.value.length > 2));
 
 // ##################
 // #####  NUXT  #####
@@ -125,7 +125,7 @@ const updatePlayersStats = async () => {
   let resp = { status: false };
 
   if (modalPlayerUpdate.value.action == 'add') {
-    if (!updateBody.isIA && updateBody.name.length <= 2) {
+    if (updateBody.name.length <= 2) {
       modalGenericMessage.value.modalTitle = 'Error input';
       modalGenericMessage.value.modalMessage = 'Invalid player name';
       modalGenericMessage.value.triggerModal = true;

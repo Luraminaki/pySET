@@ -47,9 +47,6 @@ def int2base(number: int, base: int, padding: int=None) -> str:
     if padding is None:
         padding = base + 1
 
-    if number == 0:
-        '0'.zfill(padding)
-
     digits = ''
 
     while number:

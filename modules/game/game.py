@@ -72,21 +72,21 @@ class Game():
         return copy.deepcopy(self._players)
 
 
-    def add_player(self, player_name: str, is_IA: bool=False, difficulty: dict=None) -> dict:
+    def add_player(self, player_name: str, is_ai: bool=False, difficulty: dict=None) -> dict:
         if player_name is None:
             return { 'status': False, 'players': self.get_players(), 'error': 'PLAYER_NAME_IS_NONE' }
 
         if len(self._players) >= self._max_players:
             return { 'status': False, 'players': self.get_players(), 'error': 'MAX_PLAYER_REACHED' }
 
-        if is_IA:
+        if is_ai:
             player_name = player_name if player_name else 'bot-{}'.format(str(uuid4()).split('-', 1)[0])
 
         player, _ = self._select_player_from_name(player_name=player_name)
         if player is not None:
             return { 'status': False, 'players':self.get_players(), 'error': 'PLAYER_NAME_ALREADY_EXISTS' }
 
-        self._players.append(Player(player_name, is_IA, difficulty))
+        self._players.append(Player(player_name, is_ai, difficulty))
         self._players[-1].fold_cards_if_possible = self.grid.fold_cards_if_possible
 
         return { 'status': True, 'players': self.get_players(), 'error': '' }
@@ -116,7 +116,7 @@ class Game():
         if player is None:
             return { 'status': status, 'set': card_set, 'error': 'PLAYER_IS_NONE' }
 
-        if player.get_stats().get('is_IA', False):
+        if player.get_stats().get('is_ai', False):
             possible_sets = self.grid.get_unique_sets_on_grid()
             card_set = self._rand.choice(possible_sets)
 
@@ -205,11 +205,11 @@ def main() -> None:
     ia_player: Player = None
 
     set_game = Game(Grid())
-    players: List[Player] = set_game.add_player('', is_IA=True).get('players', [ ])
+    players: List[Player] = set_game.add_player('', is_ai=True).get('players', [ ])
 
     ia_player_name = ''
 
-    if players and players[0].get_stats().get('is_IA', False):
+    if players and players[0].get_stats().get('is_ai', False):
         ia_player: Player = players[0]
         ia_player_name = ia_player.get_stats().get('name', '')
 

@@ -1,4 +1,4 @@
-FROM node:21.6.1-alpine as buildfront
+FROM node:21.6.1-alpine AS buildfront
 
 COPY ./flask /flask
 

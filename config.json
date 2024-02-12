@@ -6,7 +6,7 @@
     "MAX_PLAYERS": 4,
     "SUBMIT_TIMEOUT_SECONDS": 5,
     "PENALTY_TIMEOUT_SECONDS": 20,
-    "ia": {
+    "ai": {
         "easy": [10000, 15000],
         "normal": [7000, 10000],
         "hard": [3000, 5000]

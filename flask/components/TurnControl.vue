@@ -22,8 +22,8 @@
 
 <script setup>
 import { ref, computed, onBeforeMount, onMounted } from "vue";
-import { changeGameState, submitSet } from "/assets/webAppAPI.js";
-import { TypeStates, GameStates, PlayerStates } from "/assets/states.js";
+import { changeGameState, submitSet } from "~/assets/webAppAPI.js";
+import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
 
 // ##################
 // #####  VARS  #####
@@ -76,11 +76,11 @@ const buttonGameStateFlavor = computed(() => {
   return flavor;
 });
 
-// Player list informations (Human / IA) for some automation
-const isIA = (value) => value.is_IA;
-const onlyIAPlayers = computed(() => (props.playersStats.every(isIA)));
-const iaPlayers = computed(() => props.playersStats.filter(playersStats => playersStats.is_IA));
-const humanPlayers = computed(() => props.playersStats.filter(playersStats => !playersStats.is_IA));
+// Player list informations (Human / AI) for some automation
+const isAI = (value) => value.is_ai;
+const onlyAIPlayers = computed(() => (props.playersStats.every(isAI)));
+const aiPlayers = computed(() => props.playersStats.filter(playersStats => playersStats.is_ai));
+const humanPlayers = computed(() => props.playersStats.filter(playersStats => !playersStats.is_ai));
 
 const selectedPlayer = ref('');
 

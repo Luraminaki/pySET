@@ -61,9 +61,9 @@
 
 <script setup>
 import { ref, onBeforeMount, onMounted } from "vue";
-import { initConfig, sleep } from "/assets/helpers.js";
-import { getGameState, getPlayersInfos } from "/assets/webAppAPI.js";
-import { GameStates, PlayerStates } from "/assets/states.js";
+import { initConfig, sleep } from "~/assets/helpers.js";
+import { getGameState, getPlayersInfos } from "~/assets/webAppAPI.js";
+import { GameStates, PlayerStates } from "~/assets/states.js";
 
 // ##################
 // #####  VARS  #####
@@ -82,7 +82,7 @@ const playerState = ref(PlayerStates.IDLE);
 
 const selectedPlayer = ref('');
 const playersStats = ref([{ name: "John",
-                            is_IA: false,
+                            is_ai: false,
                             calls: 0,
                             number_invalid_sets: 0,
                             number_valid_sets: 0,
@@ -156,6 +156,10 @@ const updatePlayerStateHandler = async (ev) => {
 const updateGameStateHandler = async (ev) => {
   console.log(`default -- New signal from: ${ev.from} for: ${ev.typeState.name} requesting state: ${ev.gameState.name}`);
   await sleep(100); // Mandatory to avoid VUE crashes
+
+  if (ev.gameState.name == GameStates.NEW.name) {
+    await sleep(100); // Mandatory to avoid VUE crashes
+  }
 
   if (ev.data.action == 'hint') {
     hintedCards.value = ev.data.hintedCards;

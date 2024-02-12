@@ -12,6 +12,7 @@ import typing
 import inspect
 from functools import wraps
 
+from werkzeug.datastructures import ImmutableMultiDict, FileStorage
 from flask_classful import FlaskView, route
 from flask import  Response, render_template, request
 #===================================================================================================
@@ -56,13 +57,14 @@ def export(func: typing.Callable[..., typing.Optional[typing.Any]]=None, req: st
         return str(f"Hello world! {payload.get('name', '')}")
 
     Args:
-        function (typing.Callable[..., typing.Optional[typing.Any]]): The function to be executed.
-        req (str): The request type which can be either 'form', 'data' or 'files' (only supported ones).
+        func (typing.Callable[..., typing.Optional[typing.Any]]): The function to be executed. Defaults to None.
+        req (bytes | str | ImmutableMultiDict[str, str] | ImmutableMultiDict[str, FileStorage], optional): The request type which can be either 'form', 'data' or 'files' (only supported ones). Defaults to ''.
     Returns:
-        typing.Callable[..., typing.Optional[typing.Any]]: .
+        typing.Callable[..., typing.Optional[typing.Any]]: decorator(func).
     """
     def decorator(func: typing.Callable[..., typing.Optional[typing.Any]]) -> typing.Callable[..., typing.Optional[typing.Any]]:
-        """https://www.geeksforgeeks.org/python-functools-wraps-function/
+        """
+        https://www.geeksforgeeks.org/python-functools-wraps-function/
 
         Args:
             func (typing.Callable[..., typing.Optional[typing.Any]]): API function to decorate.
@@ -75,14 +77,7 @@ def export(func: typing.Callable[..., typing.Optional[typing.Any]]=None, req: st
             if request.args:
                 print(f"{request.endpoint} -- Reached with URL params {dict(request.args)} -- (Not supported)")
 
-            if req == 'form' or request.form:
-                func_resp = func(AppView.api_class, json.dumps(request.form))
-            elif req == 'data' or request.data:
-                func_resp = func(AppView.api_class, request.data)
-            elif req == 'files' or request.files:
-                func_resp = func(AppView.api_class, request.files)
-            else:
-                func_resp = func(AppView.api_class)
+            func_resp = request_strategy(func, req)
 
             if isinstance(func_resp, (str, Response)):
                 return func_resp
@@ -107,4 +102,25 @@ def export(func: typing.Callable[..., typing.Optional[typing.Any]]=None, req: st
         except Exception as err_02:
             print(f"{curr_func} -- Wrapping function triggered exception {repr(err_01)}, and trying to retrieve function name triggered exception {repr(err_02)}")
 
-    return decorator
+    raise RuntimeError
+
+
+def request_strategy(func: typing.Callable[..., typing.Optional[typing.Any]]=None, req: bytes | str | ImmutableMultiDict[str, str] | ImmutableMultiDict[str, FileStorage]='') -> str | Response | dict | list:
+    """
+    Function that returns the result of the AppView.api_class method called depending on the flask.request made.
+
+    Args:
+        func (typing.Callable[..., typing.Optional[typing.Any]], optional): The function to be executed. Defaults to None.
+        req (bytes | str | ImmutableMultiDict[str, str] | ImmutableMultiDict[str, FileStorage], optional): The request type which can be either 'form', 'data' or 'files' (only supported ones). Defaults to ''.
+
+    Returns:
+        str | Response | dict | list: Result of the AppView.api_class method (func)
+    """
+    if req == 'form' or request.form:
+        return func(AppView.api_class, json.dumps(request.form))
+    if req == 'data' or request.data:
+        return func(AppView.api_class, request.data)
+    if req == 'files' or request.files:
+        return func(AppView.api_class, request.files)
+
+    return func(AppView.api_class)

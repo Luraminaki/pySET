@@ -280,8 +280,8 @@ class Grid():
             pp_grid = np.array(self._cards_on_grid)
             pp_grid = np.reshape(pp_grid, (-1, self._rows)).tolist()
 
-        except:
-            pass
+        except Exception:
+            print("Unexpected error occured while trying to pretty print the grid in the console...")
 
         for line in pp_grid:
             game = game + str(line) + "\n"

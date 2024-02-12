@@ -28,8 +28,8 @@
 
 <script setup>
 import { ref, computed, onBeforeMount, onMounted } from "vue";
-import { getHints, resetGame } from "/assets/webAppAPI.js";
-import { TypeStates, GameStates, PlayerStates } from "/assets/states.js";
+import { getHints, resetGame } from "~/assets/webAppAPI.js";
+import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
 
 // ##################
 // #####  VARS  #####
@@ -127,6 +127,3 @@ const reset = async () => {
   return { status: true };
 };
 </script>
-
-<style scoped>
-</style>

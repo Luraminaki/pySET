@@ -23,9 +23,9 @@ __version__ = '0.1.0'
 class Player():
     fold_cards_if_possible: callable
 
-    def __init__(self, player_name='', is_IA: bool=False, difficulty: dict=None):
+    def __init__(self, player_name='', is_ai: bool=False, difficulty: dict=None):
         self._name = player_name
-        self._is_IA = is_IA
+        self._is_ai = is_ai
         self._difficulty = difficulty
 
         self._found_sets: List[tuple] = [ ]
@@ -72,7 +72,7 @@ class Player():
             average_answers_time = int(sum(self._set_found_elapsed_time)/len(self._set_found_elapsed_time))
 
         return { 'name': self._name,
-                 'is_IA': self._is_IA,
+                 'is_ai': self._is_ai,
                  'difficulty': self._difficulty,
                  'calls': self._set_called,
                  'number_invalid_sets': self._set_called - len(self._found_sets),

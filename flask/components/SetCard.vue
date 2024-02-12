@@ -50,7 +50,7 @@ watch(
       await toggleCard();
     }
     else {
-      
+      console.log(`${newValue} not handled`);
     }
   }
 );

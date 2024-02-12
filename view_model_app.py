@@ -45,6 +45,9 @@ class ViewModelApp():
         self.set_game.set_penalty_time(self.config.get('PENALTY_TIMEOUT_SECONDS', 20))
         self.set_game.set_max_player(self.config.get('MAX_PLAYERS', 4))
 
+        self.ack = {"01": "DATA_RECIEVED"}
+        self.errors = {"01": "PARAMS_ERROR"}
+
 
     ################################################
     #                  BASIC  API                  #
@@ -77,11 +80,11 @@ class ViewModelApp():
 
         try:
             data: dict = json.loads(params)
-        except:
-            self.logger.error("%s -- Params error: %s", curr_func, params)
-            return { 'status': StatusFunction.ERROR.name, 'players_stats': [], 'game_state': self.set_game.get_game_state(), 'error': 'params error' }
+        except json.decoder.JSONDecodeError:
+            self.logger.error("%s --%s: %s", curr_func, self.errors['01'], params)
+            return { 'status': StatusFunction.ERROR.name, 'players_stats': [], 'game_state': self.set_game.get_game_state(), 'error': self.errors['01'] }
 
-        self.logger.info("%s -- Data received: %s", curr_func, data)
+        self.logger.info("%s -- %s: %s", curr_func, self.ack['01'], data)
 
         if self.set_game.get_game_state() == GameState.RUNNING:
             return { 'status': StatusFunction.ERROR.name, 'players_stats': [], 'game_state': self.set_game.get_game_state(), 'error': 'Not allowed: Game is running' }
@@ -103,11 +106,11 @@ class ViewModelApp():
 
         try:
             data: dict = json.loads(params)
-        except:
-            self.logger.error("%s -- Params error: %s", curr_func, params)
-            return { 'status': StatusFunction.ERROR.name, 'players_stats': [], 'game_state': self.set_game.get_game_state(), 'error': 'params error' }
+        except json.decoder.JSONDecodeError:
+            self.logger.error("%s --%s: %s", curr_func, self.errors['01'], params)
+            return { 'status': StatusFunction.ERROR.name, 'players_stats': [], 'game_state': self.set_game.get_game_state(), 'error': self.errors['01'] }
 
-        self.logger.info("%s -- Data received: %s", curr_func, data)
+        self.logger.info("%s -- %s: %s", curr_func, self.ack['01'], data)
 
         if self.set_game.get_game_state() == GameState.RUNNING:
             return { 'status': StatusFunction.ERROR.name, 'players_stats': [], 'game_state': self.set_game.get_game_state(), 'error': 'Not allowed: Game is running' }
@@ -140,11 +143,11 @@ class ViewModelApp():
 
         try:
             data: dict = json.loads(params)
-        except:
-            self.logger.error("%s -- Params error: %s", curr_func, params)
-            return { 'status': StatusFunction.ERROR.name, 'is_valid': False, 'set': [], 'player_name': '', 'game_state': self.set_game.get_game_state(), 'error': 'params error' }
+        except json.decoder.JSONDecodeError:
+            self.logger.error("%s --%s: %s", curr_func, self.errors['01'], params)
+            return { 'status': StatusFunction.ERROR.name, 'is_valid': False, 'set': [], 'player_name': '', 'game_state': self.set_game.get_game_state(), 'error': self.errors['01'] }
 
-        self.logger.info("%s -- Data received: %s", curr_func, data)
+        self.logger.info("%s -- %s: %s", curr_func, self.ack['01'], data)
 
         player_name = data.get('playerName', '')
         card_set = data.get('set', {})
@@ -161,11 +164,11 @@ class ViewModelApp():
 
         try:
             data: dict = json.loads(params)
-        except:
-            self.logger.error("%s -- Params error: %s", curr_func, params)
-            return { 'status': StatusFunction.ERROR.name, 'game_state': self.set_game.get_game_state(), 'error': 'params error' }
+        except json.decoder.JSONDecodeError:
+            self.logger.error("%s --%s: %s", curr_func, self.errors['01'], params)
+            return { 'status': StatusFunction.ERROR.name, 'game_state': self.set_game.get_game_state(), 'error': self.errors['01'] }
 
-        self.logger.info("%s -- Data received: %s", curr_func, data)
+        self.logger.info("%s -- %s: %s", curr_func, self.ack['01'], data)
 
         player_name = data.get('playerName', '')
 
@@ -185,11 +188,11 @@ class ViewModelApp():
 
         try:
             data: dict = json.loads(params)
-        except:
-            self.logger.error("%s -- Params error: %s", curr_func, params)
-            return { 'status': StatusFunction.ERROR.name, 'grid': [], 'draw_pile': -1, 'game_state': self.set_game.get_game_state(), 'error': 'params error' }
+        except json.decoder.JSONDecodeError:
+            self.logger.error("%s --%s: %s", curr_func, self.errors['01'], params)
+            return { 'status': StatusFunction.ERROR.name, 'grid': [], 'draw_pile': -1, 'game_state': self.set_game.get_game_state(), 'error': self.errors['01'] }
 
-        self.logger.info("%s -- Data received: %s", curr_func, data)
+        self.logger.info("%s -- %s: %s", curr_func, self.ack['01'], data)
 
         if not self.set_game.get_players():
             return { 'status': StatusFunction.ERROR.name, 'grid': [], 'draw_pile': -1, 'game_state': self.set_game.get_game_state(), 'error': 'No player found' }
@@ -221,11 +224,11 @@ class ViewModelApp():
 
         try:
             data: dict = json.loads(params)
-        except:
-            self.logger.error("%s -- Params error: %s", curr_func, params)
-            return { 'status': StatusFunction.ERROR.name, 'game_state': self.set_game.get_game_state(), 'error': 'params error' }
+        except json.decoder.JSONDecodeError:
+            self.logger.error("%s --%s: %s", curr_func, self.errors['01'], params)
+            return { 'status': StatusFunction.ERROR.name, 'game_state': self.set_game.get_game_state(), 'error': self.errors['01'] }
 
-        self.logger.info("%s -- Data received: %s", curr_func, data)
+        self.logger.info("%s -- %s: %s", curr_func, self.ack['01'], data)
 
         hard_reset: bool = data.get('hard', True)
         players_stats = [ player.get_stats() for player in self.set_game.get_players() ]

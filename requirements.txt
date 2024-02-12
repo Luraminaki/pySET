@@ -2,4 +2,5 @@ numpy
 gunicorn
 Flask
 Flask-Classful
+flask-cors
 werkzeug
