@@ -53,7 +53,8 @@ const disableHint = computed(() => (props.gameState != GameStates.RUNNING.name |
                                     props.playerState == PlayerStates.SUBMITTING.name ||
                                     props.playerState == PlayerStates.LOCKED.name))
 
-const disableReset = computed(() => (props.playerState == PlayerStates.LOCKED.name))
+const disableReset = computed(() => (props.gameState == GameStates.NEW.name ||
+                                     props.playerState == PlayerStates.LOCKED.name))
 
 // ##################
 // #####  NUXT  #####
