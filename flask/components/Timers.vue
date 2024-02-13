@@ -154,6 +154,10 @@ const updatePlayerPenaltyProgressBar = (playerIndex) => {
       playersTimerPenaltyProgress.value[playerIndex]  = playersTimerPenaltyProgress.value[playerIndex] - (timer/1000);
     }
 
+    if(props.gameState == GameStates.NEW.name){
+      playersTimerPenaltyProgress.value[playerIndex] = 0;
+    }
+
     return { status: true };
   }, timer);
 };
