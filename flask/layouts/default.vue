@@ -144,7 +144,7 @@ const updatePlayerStateHandler = async (ev) => {
     selectedPlayer.value = '';
     return { status: true };
   }
-  else if (ev.playerState.name == PlayerStates.SUBMITTING.name) {
+  else if (ev.playerState == PlayerStates.SUBMITTING.name) {
     selectedPlayer.value = ev.data.playerName;
   }
   else {
