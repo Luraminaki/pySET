@@ -15,9 +15,18 @@
     </BButton>
   </BNavForm>
 
-  <b-modal v-model="modalReset.do" :title="modalReset.modalTitle" @ok="reset()" @cancel="modalReset.do = false" @close="modalReset.do = false">
+  <b-modal v-model="modalReset.do" :title="modalReset.modalTitle" @ok="modalReset.do = false" @cancel="modalReset.do = false" @close="modalReset.do = false" ok-only ok-title="Cancel">
     {{ modalReset.modalMessage }}
-    <BFormCheckbox v-model="hardReset" size="sm">Full Reset</BFormCheckbox>
+    <div class="is-flex">
+      <BButton @click="reset(false)">
+        <i class="mdi mdi-restart" aria-hidden="true"></i>
+        SOFT
+      </BButton>
+      <BButton @click="reset(true)" variant="warning">
+        <i class="mdi mdi-restart-alert" aria-hidden="true"></i>
+        HARD
+      </BButton>
+    </div>
   </b-modal>
 
   <div :v-model="modalGenericMessage">
@@ -46,8 +55,7 @@ const emit = defineEmits(['update-player-state', 'update-game-state']);
 
 const modalGenericMessage = ref({triggerModal: false, modalTitle: '', modalMessage: ''});
 
-const modalReset = ref({ do: false, modalTitle: 'Reset', modalMessage: 'Reset game?' });
-const hardReset = ref(false);
+const modalReset = ref({ do: false, modalTitle: 'Reset game?', modalMessage: '' });
 
 const disableHint = computed(() => (props.gameState != GameStates.RUNNING.name ||
                                     props.playerState == PlayerStates.SUBMITTING.name ||
@@ -80,8 +88,8 @@ const askReset = () => {
 };
 
 const resetValues = () => {
-  hardReset.value = false;
   modalReset.value.do = false;
+  return { status: true };
 };
 
 // ###################
@@ -104,10 +112,10 @@ const getRandomHint = async () => {
   return { status: true };
 };
 
-const reset = async () => {
+const reset = async (hardReset) => {
   modalReset.value.do = false;
 
-  const resp = await resetGame(modalGenericMessage, { hard: hardReset.value });
+  const resp = await resetGame(modalGenericMessage, { hard: hardReset });
   if (!resp.status) {
     return { status: resp.status };
   }
@@ -128,3 +136,11 @@ const reset = async () => {
   return { status: true };
 };
 </script>
+
+<style scoped>
+.is-flex {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+}
+</style>
