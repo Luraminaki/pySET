@@ -23,17 +23,29 @@ yarn generate
 
 ## START GUIDE
 
-Open a new terminal and either type
+Open a new terminal in the directory `pySET` and activate the `.venv` previously created as follow, or as shown in [HowTo](https://docs.python.org/3/tutorial/venv.html#creating-virtual-environments)
+
+- Windows
 
 ```sh
-cd pySET
+.venv\Scripts\activate
+```
+
+- Unix or MacOS
+
+```sh
+source .venv/Scriptsactivate
+```
+
+Once activated, you can run the project with either
+
+```sh
 python3 server_app.py -c config.json
 ```
 
 or
 
 ```sh
-cd pySET
 gunicorn -c gunicorn/dev_app.py
 ```
 
@@ -41,7 +53,7 @@ You can now open your favorite web browser and [start-the-game](http://localhost
 
 ## DOCKER
 
-I wrote a `Dockerfile` as a training exercise and for those that want something that "just works".
+I wrote a `Dockerfile` as a training exercise and for those that want something that "just works". (Though, you have to know how [Docker](https://www.docker.com/) or [Rancher](https://www.rancher.com/) works beforehand...)
 
 ```sh
 cd pySET
