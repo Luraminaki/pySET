@@ -10,12 +10,12 @@
     "postinstall": "nuxt prepare"
   },
   "devDependencies": {
-    "@bootstrap-vue-next/nuxt": "^0.16.1",
+    "@bootstrap-vue-next/nuxt": "^0.16.2",
     "@mdi/font": "^7.0",
     "@popperjs/core": "^2.0",
     "@types/node": "^20.0",
     "bootstrap": "^5.0",
-    "bootstrap-vue-next": "^0.16.1",
+    "bootstrap-vue-next": "^0.16.2",
     "nuxt": "^3.0",
     "sass": "^1.0",
     "sass-loader": "^14.0",
