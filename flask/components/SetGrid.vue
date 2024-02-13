@@ -112,7 +112,7 @@ watch(
       await loadGame(false);
     }
     else {
-      console.log(`${newValue} not handled`);
+      console.log(`${componentName.value} -- ${TypeStates.GAME.name} ${newValue} not handled`);
     }
   }
 );
@@ -164,7 +164,7 @@ const cardHandler = async (ev) => {
     }
   }
   else {
-    console.log(`${ev.action} not handled`);
+    console.log(`${componentName.value} -- Card Action ${ev.action} not handled`);
   }
 
   if (cardsEvent.value.event == 'untoggle-request') {

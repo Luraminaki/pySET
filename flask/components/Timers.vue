@@ -101,7 +101,7 @@ watch(
       }
     }
     else {
-      console.log(`${componentName.value} ignored ${newValue}`);
+      console.log(`${componentName.value} ignored ${TypeStates.PLAYER.name} ${newValue}`);
     }
   }
 );

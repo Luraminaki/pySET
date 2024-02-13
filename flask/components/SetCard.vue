@@ -51,7 +51,7 @@ watch(
       await toggleCard();
     }
     else {
-      console.log(`${newValue} not handled`);
+      console.log(`${componentName.value} -- Card Event ${newValue} not handled`);
     }
   }
 );
