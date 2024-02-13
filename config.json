@@ -4,6 +4,7 @@
     "app_version": "0.1.0",
     "logging_level": "INFO",
     "MAX_PLAYERS": 4,
+    "PLAYER_NAME_MAX_CHARS": 12,
     "SUBMIT_TIMEOUT_SECONDS": 10,
     "PENALTY_TIMEOUT_SECONDS": 20,
     "ai": {

@@ -115,7 +115,7 @@ class ViewModelApp():
         if self.set_game.get_game_state() == GameState.RUNNING:
             return { 'status': StatusFunction.ERROR.name, 'players_stats': [], 'game_state': self.set_game.get_game_state(), 'error': 'Not allowed: Game is running' }
 
-        player_name = data.get('name', '')[:12]
+        player_name = data.get('name', '')[:self.config['PLAYER_NAME_MAX_CHARS']]
 
         if len(player_name) <= 2:
             return { 'status': StatusFunction.ERROR.name, 'players_stats': [], 'game_state': self.set_game.get_game_state(), 'error': 'Invalid player name' }

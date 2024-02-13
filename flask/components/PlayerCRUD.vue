@@ -1,7 +1,7 @@
 <template>
 
   <div class="is-flex">
-    <BDropdown text="Players" variant="" :disabled="disableRemove">
+    <BDropdown text="Remove player" variant="" :disabled="disableRemove">
       <BDropdownItem  v-for="val in props.playersStats" :key="val.name" :title="val.name" @click="prepareRemove(val.name)">
         <span>
           <p class="mdi mdi-trash-can" aria-hidden="true">{{ val.name }}</p>
@@ -11,17 +11,18 @@
 
     <BButton variant="success" @click="prepareAdd()" :disabled="disableAdd">
       <i class="mdi mdi-plus-circle-outline"></i>
+      Add player
     </BButton>
   </div>
 
   <b-modal v-model="modalPlayerUpdate.do"
            :title="modalPlayerUpdate.modalTitle"
-           :ok-disabled="modalPlayerUpdate.action == 'add' && !validPlayerName"
+           :ok-disabled="modalPlayerUpdate.action == 'add' && (!validPlayerName || !uniquePlayerName)"
            @ok="updatePlayersStats()"
-           @cancel="modalPlayerUpdate.do = false"
+           @cancel="modalPlayerUpdate.do = false; playerName = ''"
            @close="modalPlayerUpdate.do = false">
     <b-form-group v-if="modalPlayerUpdate.action=='add'">
-      <BFormInput v-model="playerName" :state="validPlayerName" type="text" placeholder="Player name"/>
+      <BFormInput v-model="playerName" :state="validPlayerName && uniquePlayerName" type="text" placeholder="Player name"/>
     </b-form-group>
     <div v-if="modalPlayerUpdate.action=='remove'">
       Remove player {{ modalPlayerUpdate.player.name }}?
@@ -62,11 +63,17 @@ const modalPlayerUpdate = ref({ do: false, modalTitle: '', modalMessage: '', act
 const disableRemove = computed(() => (props.playersStats.length == 0 ||
                                       props.gameState != GameStates.NEW.name ||
                                       props.playerState == PlayerStates.LOCKED.name));
-const disableAdd = computed(() => (props.gameState != GameStates.NEW.name ||
+const disableAdd = computed(() => (props.playersStats.length == config.value.MAX_PLAYERS ||
+                                   props.gameState != GameStates.NEW.name ||
                                    props.playerState == PlayerStates.LOCKED.name));
 
 const playerName = ref('');
-const validPlayerName = computed(() => (playerName.value.length > 2));
+const uniquePlayerName = computed(() => (props.playersStats.filter(findPlayerByName).length == 0));
+const validPlayerName = computed(() => (playerName.value.length > 2 && playerName.value.length <= config.value.PLAYER_NAME_MAX_CHARS));
+
+function findPlayerByName(player, index) {
+  return player.name == playerName.value;
+}
 
 // ##################
 // #####  NUXT  #####
