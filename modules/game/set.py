@@ -16,7 +16,6 @@ import copy
 
 import math
 import random
-import numpy as np
 
 #pylint: disable=wrong-import-order, wrong-import-position
 from modules.game.features import Shape, Color, Shading, Amount
@@ -137,7 +136,7 @@ class Grid():
         for card in card_set:
             grouped_flavors.append([*str(card)])
 
-        grouped_flavors = np.transpose(grouped_flavors)
+        grouped_flavors = [[row[i] for row in grouped_flavors] for i in range(len(grouped_flavors[0]))] # Equivalent to np.transpose(grouped_flavors)
         for flavor in grouped_flavors:
             any_sub_valid = any_sub_valid or list(flavor).count(most_frequent_flavor(list(flavor))) not in (1, self._rows)
 
@@ -165,6 +164,19 @@ class Grid():
         return all_valid_sets
 
 
+    def _split_list(self, list_to_split: list[int], chunk_size: int) -> list[list[int]]:
+        """Returns a list of list of a desired lenght
+
+        Args:
+            list_to_split (list[int]): Flatlist to split
+            chunk_size (int): lenght of the sublist
+
+        Returns:
+            list[list[int]]: list of sublist
+        """
+        return [list_to_split[i:i + chunk_size] for i in range(0, len(list_to_split), chunk_size)]
+
+
     #
     # CRUD (PUBLIC)
     #
@@ -176,8 +188,7 @@ class Grid():
         Returns:
             list: list of list of 3 cards (or an empty list).
         """
-        grid = np.reshape(self._cards_on_grid, (-1, self._rows))
-        return grid.tolist()
+        return self._split_list(self._cards_on_grid, self._rows)
 
 
     def get_size_all_time_unique_sets(self) -> int:
@@ -277,8 +288,7 @@ class Grid():
         game = ""
 
         try:
-            pp_grid = np.array(self._cards_on_grid)
-            pp_grid = np.reshape(pp_grid, (-1, self._rows)).tolist()
+            pp_grid = self.grid_to_list()
 
         except Exception:
             print("Unexpected error occured while trying to pretty print the grid in the console...")
