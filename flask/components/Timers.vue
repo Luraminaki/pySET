@@ -195,15 +195,17 @@ const prepareForPlayerPenalty = () => {
 // ###################
 
 const sendPlayerPenalty = async () => {
+  const penalisedPlayer = JSON.parse(JSON.stringify({name: props.penalisedPlayer}));
+
   let playerIndex = 0;
   function findPlayerByName(player, index) {
     playerIndex = index;
-    return player.name == props.penalisedPlayer;
+    return player.name == penalisedPlayer.name;
   }
 
   const player = props.playersStats.filter(findPlayerByName);
   if (player.length == 0) {
-    modalGenericMessage.value.modalMessage = `Player ${props.penalisedPlayer} not found`;
+    modalGenericMessage.value.modalMessage = `Player ${penalisedPlayer.name} not found`;
     modalGenericMessage.value.modalTitle = 'Not found';
     modalGenericMessage.value.triggerModal = true;
 
@@ -216,7 +218,7 @@ const sendPlayerPenalty = async () => {
                               data: {action: 'untoggle-request'},
                               from: [componentName.value] });
 
-  const resp = await sendPenalty(modalGenericMessage, { playerName: props.penalisedPlayer });
+  const resp = await sendPenalty(modalGenericMessage, { playerName: penalisedPlayer.name });
   if (!resp.status) {
     return { status: resp.status };
   }
@@ -225,7 +227,7 @@ const sendPlayerPenalty = async () => {
   updatePlayerPenaltyProgressBar(playerIndex);
 
   // TODO: Use a toast here
-  modalGenericMessage.value.modalMessage = `${config.value.PENALTY_TIMEOUT_SECONDS}s penalty applied to ${props.penalisedPlayer}`;
+  modalGenericMessage.value.modalMessage = `${config.value.PENALTY_TIMEOUT_SECONDS}s penalty applied to ${penalisedPlayer.name}`;
   modalGenericMessage.value.modalTitle = 'Applying penalty';
   modalGenericMessage.value.triggerModal = true;
 
