@@ -49,7 +49,7 @@ const modalGenericMessage = ref({triggerModal: false, modalTitle: '', modalMessa
 const modalReset = ref({ do: false, modalTitle: 'Reset', modalMessage: 'Reset game?' });
 const hardReset = ref(false);
 
-const disableHint = computed(() => (props.gameState.name == GameStates.ENDED.name ||
+const disableHint = computed(() => (props.gameState.name != GameStates.RUNNING.name ||
                                     props.playerState.name == PlayerStates.SUBMITTING.name ||
                                     props.playerState.name == PlayerStates.LOCKED.name))
 
