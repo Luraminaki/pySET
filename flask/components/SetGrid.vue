@@ -58,8 +58,8 @@ import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
 // ##################
 
 const props = defineProps({
-  gameState: { type: Object, required: true },
-  playerState: { type: Object, required: true },
+  gameState: { type: String, required: true },
+  playerState: { type: String, required: true },
   selectedPlayer: { type: String, required: true },
   playersStats: { type: Array, required: false, default() { return [] } },
   hintedCards: { type: Array, required: false, default() { return [] } },
@@ -75,9 +75,9 @@ config.value = await useState('config').value.then(r => r);
 const modalGenericMessage = ref({triggerModal: false, modalTitle: '', modalMessage: ''});
 
 // Control variables
-const showGrid = computed(() => (props.gameState.name == GameStates.PAUSED.name ||
-                                 props.gameState.name == GameStates.NEW.name));
-const allowPlayerGridClick = computed(() => (props.playerState.name == PlayerStates.SUBMITTING.name))
+const showGrid = computed(() => (props.gameState == GameStates.PAUSED.name ||
+                                 props.gameState == GameStates.NEW.name));
+const allowPlayerGridClick = computed(() => (props.playerState == PlayerStates.SUBMITTING.name))
 const preventToggle = computed(() => (selectedCards.value.length == grid.value[0].length));
 
 const cardsEvent = ref({ cards: [], event: '' });
@@ -104,7 +104,7 @@ onMounted(async () => {
 
 // https://stackoverflow.com/questions/59125857/how-to-watch-props-change-with-vue-composition-api-vue-3
 watch(
-  () => props.gameState.name, async (newValue, oldValue) => {
+  () => props.gameState, async (newValue, oldValue) => {
     if (newValue == GameStates.RESET.name) {
       await loadGame(true);
     }
@@ -118,7 +118,7 @@ watch(
 );
 
 watch(
-  () => props.playerState.name, async (newValue, oldValue) => {
+  () => props.playerState, async (newValue, oldValue) => {
     if (newValue == GameStates.UPDATE.name) {
       await loadGame(false);
     }
@@ -229,12 +229,6 @@ const updateGameStateHandler = (ev) => {
 // ###################
 
 const loadGame = async (reload=false) => {
-  emit('update-player-state', { status: true,
-                                typeState: TypeStates.PLAYER,
-                                playerState: PlayerStates.LOCKED,
-                                data: {action: ''},
-                                from: [componentName.value] });
-
   cardsEvent.value.action = '';
   cardsEvent.value.cards = [];
 
@@ -250,8 +244,8 @@ const loadGame = async (reload=false) => {
   const resp = await getGame(modalGenericMessage);
   if (!resp.status) {
     emit('update-game-state', { status: true,
-                                  typeState: TypeStates.GAME,
-                                  gameState: GameStates.UNDEFINED,
+                                  typeState: TypeStates.GAME.name,
+                                  gameState: GameStates.UNDEFINED.name,
                                   data: {action: ''},
                                   from: [componentName.value] });
     return { status: resp.status };
@@ -261,16 +255,10 @@ const loadGame = async (reload=false) => {
   drawPile.value = resp.content.draw_pile;
 
   emit('update-game-state', { status: resp.status,
-                              typeState: TypeStates.GAME,
-                              gameState: GameStates[resp.content.game_state],
+                              typeState: TypeStates.GAME.name,
+                              gameState: GameStates[resp.content.game_state].name,
                               data: {action: ''},
                               from: [componentName.value] });
-
-  emit('update-player-state', { status: true,
-                                typeState: TypeStates.PLAYER,
-                                playerState: PlayerStates.IDLE,
-                                data: {action: ''},
-                                from: [componentName.value] });
 
   return { status: true };
 };

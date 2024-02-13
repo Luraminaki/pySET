@@ -30,8 +30,8 @@ import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
 // ##################
 
 const props = defineProps({
-  gameState: { type: Object, required: true },
-  playerState: { type: Object, required: true },
+  gameState: { type: String, required: true },
+  playerState: { type: String, required: true },
   playersStats: { type: Array, required: false, default() { return [] } },
   selectedCards: { type: Array, required: false, default() { return [] } },
 });
@@ -44,23 +44,23 @@ const modalGenericMessage = ref({triggerModal: false, modalTitle: '', modalMessa
 const modalSelectPlayer = ref({ do: false, modalTitle: 'Select player', modalMessage: '' });
 
 // Control variables
-const canToggleGameState = computed(() => (props.playerState.name == PlayerStates.IDLE.name &&
-                                           (props.gameState.name == GameStates.NEW.name ||
-                                            props.gameState.name == GameStates.RUNNING.name ||
-                                            props.gameState.name == GameStates.PAUSED.name) &&
+const canToggleGameState = computed(() => (props.playerState == PlayerStates.IDLE.name &&
+                                           (props.gameState == GameStates.NEW.name ||
+                                            props.gameState == GameStates.RUNNING.name ||
+                                            props.gameState == GameStates.PAUSED.name) &&
                                            props.playersStats.length != 0));
-const canCallSet = computed(() => (props.playerState.name == PlayerStates.IDLE.name &&
-                                   props.gameState.name == GameStates.RUNNING.name &&
+const canCallSet = computed(() => (props.playerState == PlayerStates.IDLE.name &&
+                                   props.gameState == GameStates.RUNNING.name &&
                                    props.playersStats.length != 0));
-const canSendSet = computed(() => (props.playerState.name == PlayerStates.SUBMITTING.name &&
-                                   props.gameState.name == GameStates.RUNNING.name &&
+const canSendSet = computed(() => (props.playerState == PlayerStates.SUBMITTING.name &&
+                                   props.gameState == GameStates.RUNNING.name &&
                                    props.playersStats.length != 0 &&
                                    props.selectedCards.length == 3));
 
 // Start - Pause button cosmetic changes
 const buttonGameStateFlavor = computed(() => {
   const flavor = {variant: 'secondary', text: 'Locked'};
-  switch(props.gameState.name) {
+  switch(props.gameState) {
     case GameStates.RUNNING.name:
       flavor.variant = 'warning'; flavor.text = 'Pause';
       break;
@@ -109,7 +109,7 @@ const updateGenericModalMessage = (ev) => {
 const selectSubmittingPlayer = async () => {
   emit('update-game-state', { status: true,
                               typeState: TypeStates.GAME,
-                              gameState: props.gameState,
+                              gameState: GameStates.IGNORE.name,
                               data: {action: 'untoggle-request'},
                               from: [componentName.value] });
 
@@ -118,7 +118,7 @@ const selectSubmittingPlayer = async () => {
     return { status: respSelectedPlayer.status };
   }
 
-  if(props.gameState.name == GameStates.RUNNING.name) {
+  if(props.gameState == GameStates.RUNNING.name) {
     const respGameState = await changeGameStateRequest();
     if (!respGameState.status) {
       return { status: respGameState.status };
@@ -135,7 +135,7 @@ const proceedWithSelectedPlayer = async (playerName) => {
 
   selectedPlayer.value = playerName;
 
-  if(props.gameState.name == GameStates.PAUSED.name) {
+  if(props.gameState == GameStates.PAUSED.name) {
     const respGameState = await changeGameStateRequest();
     if (!respGameState.status) {
       selectedPlayer.value = '';
@@ -144,8 +144,8 @@ const proceedWithSelectedPlayer = async (playerName) => {
   }
 
   emit('update-player-state', { status: true,
-                                typeState: TypeStates.PLAYER,
-                                playerState: PlayerStates.SUBMITTING,
+                                typeState: TypeStates.PLAYER.name,
+                                playerState: PlayerStates.SUBMITTING.name,
                                 data: {action: '', playerName: playerName},
                                 from: [componentName.value] });
 
@@ -157,72 +157,44 @@ const proceedWithSelectedPlayer = async (playerName) => {
 // ###################
 
 const changeGameStateRequest = async () => {
-  emit('update-player-state', { status: true,
-                                typeState: TypeStates.PLAYER,
-                                playerState: PlayerStates.LOCKED,
-                                data: {action: ''},
-                                from: [componentName.value] });
-
-  const enablePause = props.gameState.name == GameStates.RUNNING.name;
+  const enablePause = props.gameState == GameStates.RUNNING.name;
   const respGameState = await changeGameState(modalGenericMessage, {enablePause: enablePause});
   if (!respGameState.status) {
     selectedPlayer.value = '';
-    emit('update-player-state', { status: true,
-                                  typeState: TypeStates.PLAYER,
-                                  playerState: PlayerStates.IDLE,
-                                  data: {action: ''},
-                                  from: [componentName.value] });
     return { status: respGameState.status };
   }
 
   emit('update-game-state', { status: true,
-                              typeState: TypeStates.GAME,
-                              gameState: GameStates[respGameState.content.game_state],
+                              typeState: TypeStates.GAME.name,
+                              gameState: GameStates[respGameState.content.game_state].name,
                               data: {action: ''},
                               from: [componentName.value] });
-
-  emit('update-player-state', { status: true,
-                                typeState: TypeStates.PLAYER,
-                                playerState: PlayerStates.IDLE,
-                                data: {action: ''},
-                                from: [componentName.value] });
 
   return { status: true };
 };
 
 const sendSelection = async (playerName) => {
-  emit('update-player-state', { status: true,
-                                typeState: TypeStates.PLAYER,
-                                playerState: PlayerStates.LOCKED,
-                                data: {action: ''},
-                                from: [componentName.value] });
-
   emit('update-game-state', { status: true,
-                              typeState: TypeStates.GAME,
-                              gameState: props.gameState,
+                              typeState: TypeStates.GAME.name,
+                              gameState: GameStates.IGNORE.name,
                               data: {action: 'untoggle-request'},
                               from: [componentName.value] });
 
   const respSubmit = await submitSet(modalGenericMessage, { playerName: playerName, set: props.selectedCards });
   selectedPlayer.value = '';
   if (!respSubmit.status){
-    emit('update-player-state', { status: true,
-                                  typeState: TypeStates.PLAYER,
-                                  playerState: PlayerStates.IDLE,
-                                  data: {action: ''},
-                                  from: [componentName.value] });
     return { status: respSubmit.status };
   }
 
   emit('update-game-state', { status: true,
-                              typeState: TypeStates.GAME,
-                              gameState: GameStates.UPDATE,
+                              typeState: TypeStates.GAME.name,
+                              gameState: GameStates.UPDATE.name,
                               data: {action: ''},
                               from: [componentName.value] });
 
   emit('update-player-state', { status: true,
-                                typeState: TypeStates.PLAYER,
-                                playerState: PlayerStates.UPDATE,
+                                typeState: TypeStates.PLAYER.name,
+                                playerState: PlayerStates.UPDATE.name,
                                 data: {action: respSubmit.content.is_valid ? '' : 'player-penalty-request'},
                                 from: [componentName.value] });
 

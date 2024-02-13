@@ -4,7 +4,7 @@
     "app_version": "0.1.0",
     "logging_level": "INFO",
     "MAX_PLAYERS": 4,
-    "SUBMIT_TIMEOUT_SECONDS": 5,
+    "SUBMIT_TIMEOUT_SECONDS": 10,
     "PENALTY_TIMEOUT_SECONDS": 20,
     "ai": {
         "easy": [10000, 15000],

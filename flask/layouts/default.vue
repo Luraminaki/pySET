@@ -77,8 +77,8 @@ config.value = await useState('config').value.then(r => r);
 
 const modalGenericMessage = ref({triggerModal: false, modalTitle: '', modalMessage: ''});
 
-const gameState = ref(GameStates.NEW);
-const playerState = ref(PlayerStates.IDLE);
+const gameState = ref(GameStates.NEW.name);
+const playerState = ref(PlayerStates.IDLE.name);
 
 const selectedPlayer = ref('');
 const playersStats = ref([{ name: "John",
@@ -118,7 +118,7 @@ onMounted(async () => {
   gameState.value = respGame.gameState;
 
   const respPlayers = await getCurrentPlayersStats();
-  playerState.value = respPlayers.status ? PlayerStates.IDLE : PlayerStates.LOCKED;
+  playerState.value = respPlayers.status ? PlayerStates.IDLE.name : PlayerStates.LOCKED.name;
   playersStats.value = respPlayers.playersStats;
 });
 
@@ -135,12 +135,11 @@ const updateGenericModalMessage = (ev) => {
 // ###################
 
 const updatePlayerStateHandler = async (ev) => {
-  console.log(`default -- New signal from: ${ev.from} for: ${ev.typeState.name} requesting state: ${ev.playerState.name}`);
-  await sleep(100); // Mandatory to avoid VUE crashes
+  console.log(`default -- New signal from: ${ev.from} for: ${ev.typeState} requesting state: ${ev.playerState}`);
 
-  if (ev.playerState.name == PlayerStates.UPDATE.name) {
+  if (ev.playerState == PlayerStates.UPDATE.name) {
     const resp = await getCurrentPlayersStats()
-    playerState.value = resp.status ? PlayerStates.IDLE : PlayerStates.LOCKED;
+    playerState.value = resp.status ? PlayerStates.IDLE.name : PlayerStates.LOCKED.name;
     playersStats.value = resp.playersStats;
     selectedPlayer.value = '';
     return { status: true };
@@ -149,7 +148,7 @@ const updatePlayerStateHandler = async (ev) => {
     selectedPlayer.value = ev.data.playerName;
   }
   else {
-    await sleep(100); // Mandatory to avoid VUE crashes
+    await sleep(300); // Mandatory to avoid VUE crashes
   }
 
   playerState.value = ev.playerState;
@@ -157,22 +156,20 @@ const updatePlayerStateHandler = async (ev) => {
 };
 
 const updateGameStateHandler = async (ev) => {
-  console.log(`default -- New signal from: ${ev.from} for: ${ev.typeState.name} requesting state: ${ev.gameState.name}`);
-  await sleep(100); // Mandatory to avoid VUE crashes
-
-  if (ev.gameState.name == GameStates.NEW.name) {
-    await sleep(100); // Mandatory to avoid VUE crashes
-  }
+  console.log(`default -- New signal from: ${ev.from} for: ${ev.typeState} requesting state: ${ev.gameState}`);
 
   if (ev.data.action == 'hint') {
     hintedCards.value = ev.data.hintedCards;
     return { status: true };
   }
 
-  if (ev.gameState.name == GameStates.ENDED.name) {
+  if (ev.gameState == GameStates.ENDED.name) {
     modalGenericMessage.value.modalTitle = 'Game Over';
     modalGenericMessage.value.modalMessage = 'No SET left to be found. Press RESET to play again.';
     modalGenericMessage.value.triggerModal = true;
+  }
+  else {
+    await sleep(300); // Mandatory to avoid VUE crashes
   }
 
   gameState.value = ev.gameState;
@@ -186,9 +183,9 @@ const updateGameStateHandler = async (ev) => {
 const getCurrentGameState = async () => {
   const resp = await getGameState(modalGenericMessage);
   if (!resp.status) {
-    return { status: resp.status, gameState: GameStates.UNDEFINED };
+    return { status: resp.status, gameState: GameStates.UNDEFINED.name };
   }
-  return { status: true, gameState: GameStates[resp.content.game_state] };
+  return { status: true, gameState: GameStates[resp.content.game_state].name };
 };
 
 const getCurrentPlayersStats = async () => {

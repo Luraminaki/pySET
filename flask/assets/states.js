@@ -6,6 +6,7 @@ export class GameStates {
   static PAUSED = new GameStates("PAUSED");
   static ENDED = new GameStates("ENDED");
   static UNDEFINED = new GameStates("UNDEFINED");
+  static IGNORE = new GameStates("IGNORE");
 
   constructor(name) {
     this.name = name;
@@ -17,6 +18,7 @@ export class PlayerStates {
   static UPDATE = new PlayerStates("UPDATE");
   static SUBMITTING = new PlayerStates("SUBMITTING");
   static LOCKED = new PlayerStates("LOCKED");
+  static IGNORE = new PlayerStates("IGNORE");
 
   constructor(name) {
     this.name = name;

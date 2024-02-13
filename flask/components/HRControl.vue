@@ -36,8 +36,8 @@ import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
 // ##################
 
 const props = defineProps({
-  gameState: { type: Object, required: true },
-  playerState: { type: Object, required: true },
+  gameState: { type: String, required: true },
+  playerState: { type: String, required: true },
 });
 
 const componentName = ref('');
@@ -49,11 +49,11 @@ const modalGenericMessage = ref({triggerModal: false, modalTitle: '', modalMessa
 const modalReset = ref({ do: false, modalTitle: 'Reset', modalMessage: 'Reset game?' });
 const hardReset = ref(false);
 
-const disableHint = computed(() => (props.gameState.name != GameStates.RUNNING.name ||
-                                    props.playerState.name == PlayerStates.SUBMITTING.name ||
-                                    props.playerState.name == PlayerStates.LOCKED.name))
+const disableHint = computed(() => (props.gameState != GameStates.RUNNING.name ||
+                                    props.playerState == PlayerStates.SUBMITTING.name ||
+                                    props.playerState == PlayerStates.LOCKED.name))
 
-const disableReset = computed(() => (props.playerState.name == PlayerStates.LOCKED.name))
+const disableReset = computed(() => (props.playerState == PlayerStates.LOCKED.name))
 
 // ##################
 // #####  NUXT  #####
@@ -95,8 +95,8 @@ const getRandomHint = async () => {
 
   const random = Math.floor(Math.random() * resp.content.sets.length);
   emit('update-game-state', { status: resp.status,
-                              typeState: TypeStates.GAME,
-                              gameState: props.gameState,
+                              typeState: TypeStates.GAME.name,
+                              gameState: GameStates.IGNORE.name,
                               data: {action: 'hint', hintedCards: resp.content.sets[random]},
                               from: [componentName.value] });
 
@@ -114,13 +114,13 @@ const reset = async () => {
   resetValues();
 
   emit('update-game-state', { status: resp.status,
-                              typeState: TypeStates.GAME,
-                              gameState: GameStates.RESET,
+                              typeState: TypeStates.GAME.name,
+                              gameState: GameStates.RESET.name,
                               data: {action: ''},
                               from: [componentName.value] });
   emit('update-player-state', { status: resp.status,
-                                typeState: TypeStates.PLAYER,
-                                playerState: PlayerStates.UPDATE,
+                                typeState: TypeStates.PLAYER.name,
+                                playerState: PlayerStates.UPDATE.name,
                                 data: {action: ''},
                                 from: [componentName.value] })
 

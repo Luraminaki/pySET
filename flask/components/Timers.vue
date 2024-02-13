@@ -30,8 +30,8 @@ import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
 // ##################
 
 const props = defineProps({
-  gameState: { type: Object, required: true },
-  playerState: { type: Object, required: true },
+  gameState: { type: String, required: true },
+  playerState: { type: String, required: true },
   playersStats: { type: Array, required: false, default() { return [] } },
   penalisedPlayer: { type: String, required: false, default() { return '' }},
 });
@@ -88,7 +88,7 @@ onMounted(async () => {
 
 // https://stackoverflow.com/questions/59125857/how-to-watch-props-change-with-vue-composition-api-vue-3
 watch(
-  () => props.playerState.name, async (newValue, oldValue) => {
+  () => props.playerState, async (newValue, oldValue) => {
     if (newValue == PlayerStates.SUBMITTING.name) {
       proceedWithSelectedPlayer()
     }
@@ -111,8 +111,8 @@ watch(
     if (newValue != '') {
       sendPlayerPenalty();
       emit('update-player-state', { status: true,
-                                    typeState: TypeStates.PLAYER,
-                                    playerState: props.playerState,
+                                    typeState: TypeStates.PLAYER.name,
+                                    playerState: PlayerStates.IGNORE.name,
                                     data: {action: 'player-penalty'},
                                     from: [componentName.value] });
     }
@@ -130,7 +130,7 @@ const updateGenericModalMessage = (ev) => {
 const updateSubmitProgressBar = () => {
   const timer = 500;
   let progressBarEvolution = setInterval(() => {
-    if (props.playerState.name != PlayerStates.SUBMITTING.name) {
+    if (props.playerState != PlayerStates.SUBMITTING.name) {
      clearInterval(progressBarEvolution);
      submitTimeoutProgress.value = config.value.SUBMIT_TIMEOUT_SECONDS;
      return { status: true };
@@ -150,7 +150,7 @@ const updatePlayerPenaltyProgressBar = (playerIndex) => {
      return { status: true };
     }
 
-    if(props.gameState.name == GameStates.RUNNING.name){
+    if(props.gameState == GameStates.RUNNING.name){
       playersTimerPenaltyProgress.value[playerIndex]  = playersTimerPenaltyProgress.value[playerIndex] - (timer/1000);
     }
 
@@ -179,8 +179,8 @@ const prepareForPlayerPenalty = () => {
 
   submitSetTimeout.value = setTimeout(() => {
     emit('update-player-state', { status: true,
-                                  typeState: TypeStates.PLAYER,
-                                  playerState: props.playerState,
+                                  typeState: TypeStates.PLAYER.name,
+                                  playerState: PlayerStates.IGNORE.name,
                                   data: {action: 'player-penalty-request'},
                                   from: [componentName.value] });
 
@@ -195,12 +195,6 @@ const prepareForPlayerPenalty = () => {
 // ###################
 
 const sendPlayerPenalty = async () => {
-  emit('update-player-state', { status: true,
-                                typeState: TypeStates.PLAYER,
-                                playerState: PlayerStates.LOCKED,
-                                data: {action: ''},
-                                from: [componentName.value] });
-
   let playerIndex = 0;
   function findPlayerByName(player, index) {
     playerIndex = index;
@@ -213,27 +207,17 @@ const sendPlayerPenalty = async () => {
     modalGenericMessage.value.modalTitle = 'Not found';
     modalGenericMessage.value.triggerModal = true;
 
-    emit('update-player-state', { status: true,
-                                  typeState: TypeStates.PLAYER,
-                                  playerState: PlayerStates.IDLE,
-                                  data: {action: ''},
-                                  from: [componentName.value] });
     return { status: false };
   }
 
   emit('update-game-state', { status: true,
-                              typeState: TypeStates.GAME,
-                              gameState: props.gameState,
+                              typeState: TypeStates.GAME.name,
+                              gameState: GameStates.IGNORE.name,
                               data: {action: 'untoggle-request'},
                               from: [componentName.value] });
 
   const resp = await sendPenalty(modalGenericMessage, { playerName: props.penalisedPlayer });
   if (!resp.status) {
-    emit('update-player-state', { status: true,
-                                  typeState: TypeStates.PLAYER,
-                                  playerState: PlayerStates.IDLE,
-                                  data: {action: ''},
-                                  from: [componentName.value] });
     return { status: resp.status };
   }
 
@@ -246,8 +230,8 @@ const sendPlayerPenalty = async () => {
   modalGenericMessage.value.triggerModal = true;
 
   emit('update-player-state', { status: true,
-                                typeState: TypeStates.PLAYER,
-                                playerState: PlayerStates.UPDATE,
+                                typeState: TypeStates.PLAYER.name,
+                                playerState: PlayerStates.UPDATE.name,
                                 data: {action: ''},
                                 from: [componentName.value] });
   return { status: true };

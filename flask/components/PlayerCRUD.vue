@@ -44,8 +44,8 @@ import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
 // ##################
 
 const props = defineProps({
-  gameState: { type: Object, required: true },
-  playerState: { type: Object, required: true },
+  gameState: { type: String, required: true },
+  playerState: { type: String, required: true },
   playersStats: { type: Array, required: false, default() { return [] } },
 });
 
@@ -60,10 +60,10 @@ const modalGenericMessage = ref({triggerModal: false, modalTitle: '', modalMessa
 const modalPlayerUpdate = ref({ do: false, modalTitle: '', modalMessage: '', action: '', player: { name: '' } });
 
 const disableRemove = computed(() => (props.playersStats.length == 0 ||
-                                      props.gameState.name != GameStates.NEW.name ||
-                                      props.playerState.name == PlayerStates.LOCKED.name));
-const disableAdd = computed(() => (props.gameState.name != GameStates.NEW.name ||
-                                   props.playerState.name == PlayerStates.LOCKED.name));
+                                      props.gameState != GameStates.NEW.name ||
+                                      props.playerState == PlayerStates.LOCKED.name));
+const disableAdd = computed(() => (props.gameState != GameStates.NEW.name ||
+                                   props.playerState == PlayerStates.LOCKED.name));
 
 const playerName = ref('');
 const validPlayerName = computed(() => (playerName.value.length > 2));
@@ -151,8 +151,8 @@ const updatePlayersStats = async () => {
   }
 
   emit('update-player-state', { status: resp.status,
-                                typeState: TypeStates.PLAYER,
-                                playerState: PlayerStates.UPDATE,
+                                typeState: TypeStates.PLAYER.name,
+                                playerState: PlayerStates.UPDATE.name,
                                 data: {action: ''},
                                 from: [componentName.value] } );
 
