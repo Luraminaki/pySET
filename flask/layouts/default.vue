@@ -148,6 +148,9 @@ const updatePlayerStateHandler = async (ev) => {
   else if (ev.playerState.name == PlayerStates.SUBMITTING.name) {
     selectedPlayer.value = ev.data.playerName;
   }
+  else {
+    await sleep(100); // Mandatory to avoid VUE crashes
+  }
 
   playerState.value = ev.playerState;
   return { status: true };
