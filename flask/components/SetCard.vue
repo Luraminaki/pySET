@@ -18,6 +18,7 @@ import { ref, onBeforeMount, onMounted, watch } from "vue";
 const props = defineProps({
   card: { type: Number, required: true },
   cardsEvent: { type: Object, required: false, default() { return { cards: [], event: '' } } },
+  preventToggle: { type: Boolean, required: false, default() { return false } }
 });
 
 const emit = defineEmits(['card-toggled']);
@@ -68,6 +69,10 @@ const toggleCard = async (toggleType) => {
 
     emit('card-toggled', { status: true, action: 'remove', card: props.card, from: [componentName.value] });
 
+    return { status: true };
+  }
+
+  if (props.preventToggle) {
     return { status: true };
   }
 

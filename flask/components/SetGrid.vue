@@ -24,6 +24,7 @@
         <BCol v-for="card in row" :key="card">
           <SetCard :card="card"
                    :cardsEvent="cardsEvent"
+                   :preventToggle="preventToggle"
 
                    @card-toggled="cardHandler($event)"/>
         </BCol>
@@ -77,6 +78,7 @@ const modalGenericMessage = ref({triggerModal: false, modalTitle: '', modalMessa
 const showGrid = computed(() => (props.gameState.name == GameStates.PAUSED.name ||
                                  props.gameState.name == GameStates.NEW.name));
 const allowPlayerGridClick = computed(() => (props.playerState.name == PlayerStates.SUBMITTING.name))
+const preventToggle = computed(() => (selectedCards.value.length == grid.value[0].length));
 
 const cardsEvent = ref({ cards: [], event: '' });
 const resetToggleCounter = ref(0);
