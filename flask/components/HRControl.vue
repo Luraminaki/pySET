@@ -1,11 +1,10 @@
 <template>
 
   <BNavForm class="d-flex">
-    <BButton @click="getRandomHint()"
-             :disabled="disableHint"
+    <BButton @click="getHelp()"
              class="btn btn-outline-light" type="button">
       <i class="mdi mdi-help-circle" aria-hidden="true"></i>
-      HINT
+      HELP
     </BButton>
     <BButton @click="askReset()"
              :disabled="disableReset"
@@ -37,7 +36,7 @@
 
 <script setup>
 import { ref, computed, onBeforeMount, onMounted } from "vue";
-import { getHints, resetGame } from "~/assets/webAppAPI.js";
+import { resetGame } from "~/assets/webAppAPI.js";
 import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
 
 // ##################
@@ -56,10 +55,6 @@ const emit = defineEmits(['update-player-state', 'update-game-state']);
 const modalGenericMessage = ref({triggerModal: false, modalTitle: '', modalMessage: ''});
 
 const modalReset = ref({ do: false, modalTitle: 'Reset game?', modalMessage: '' });
-
-const disableHint = computed(() => (props.gameState != GameStates.RUNNING.name ||
-                                    props.playerState == PlayerStates.SUBMITTING.name ||
-                                    props.playerState == PlayerStates.LOCKED.name))
 
 const disableReset = computed(() => (props.gameState == GameStates.NEW.name ||
                                      props.playerState == PlayerStates.LOCKED.name))
@@ -96,19 +91,7 @@ const resetValues = () => {
 // ###  WebAppAPI  ###
 // ###################
 
-const getRandomHint = async () => {
-  const resp = await getHints(modalGenericMessage);
-  if (!resp.status) {
-    return { status: resp.status };
-  }
-
-  const random = Math.floor(Math.random() * resp.content.sets.length);
-  emit('update-game-state', { status: resp.status,
-                              typeState: TypeStates.GAME.name,
-                              gameState: GameStates.IGNORE.name,
-                              data: {action: 'hint', hintedCards: resp.content.sets[random]},
-                              from: [componentName.value] });
-
+const getHelp = async () => {
   return { status: true };
 };
 

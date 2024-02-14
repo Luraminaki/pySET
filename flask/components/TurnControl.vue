@@ -2,6 +2,8 @@
 
   <div class="mt-4 is-flex">
     <BButton :variant="buttonGameStateFlavor.variant" @click="changeGameStateRequest()" :disabled="!canToggleGameState">{{ buttonGameStateFlavor.text }}</BButton>
+    <BButton @click="getRandomHint()"
+             :disabled="disableHint">HINT</BButton>
     <BButton :variant="setCalled ? 'outline-success' : 'info'"
              @click="setCalled ? sendSelection(selectedPlayer) : selectSubmittingPlayer()"
              :disabled="setCalled ? !canSendSet : !canCallSet">{{ setCalled ? 'Submit SET' : 'SET !' }}</BButton>
@@ -23,7 +25,7 @@
 
 <script setup>
 import { ref, computed, onBeforeMount, onMounted, watch } from "vue";
-import { changeGameState, submitSet } from "~/assets/webAppAPI.js";
+import { changeGameState, submitSet, getHints } from "~/assets/webAppAPI.js";
 import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
 
 // ##################
@@ -50,6 +52,9 @@ const canToggleGameState = computed(() => (props.playerState == PlayerStates.IDL
                                             props.gameState == GameStates.RUNNING.name ||
                                             props.gameState == GameStates.PAUSED.name) &&
                                            props.playersStats.length != 0));
+const disableHint = computed(() => (props.gameState != GameStates.RUNNING.name ||
+                                    props.playerState == PlayerStates.SUBMITTING.name ||
+                                    props.playerState == PlayerStates.LOCKED.name))
 const canCallSet = computed(() => (props.playerState == PlayerStates.IDLE.name &&
                                    props.gameState == GameStates.RUNNING.name &&
                                    props.playersStats.length != 0));
@@ -62,16 +67,16 @@ const setCalled = ref(false);
 
 // Start - Pause button cosmetic changes
 const buttonGameStateFlavor = computed(() => {
-  const flavor = {variant: 'secondary', text: 'Locked'};
+  const flavor = {variant: 'secondary', text: 'LOCKED'};
   switch(props.gameState) {
     case GameStates.RUNNING.name:
-      flavor.variant = 'warning'; flavor.text = 'Pause';
+      flavor.variant = 'warning'; flavor.text = 'PAUSE';
       break;
     case GameStates.PAUSED.name:
-      flavor.variant = 'success'; flavor.text = 'Start';
+      flavor.variant = 'success'; flavor.text = 'START';
       break;
     case GameStates.NEW.name:
-      flavor.variant = 'success'; flavor.text = 'Start';
+      flavor.variant = 'success'; flavor.text = 'START';
       break;
     default:
       break;
@@ -181,6 +186,22 @@ const changeGameStateRequest = async () => {
                               typeState: TypeStates.GAME.name,
                               gameState: GameStates[respGameState.content.game_state].name,
                               data: {action: ''},
+                              from: [componentName.value] });
+
+  return { status: true };
+};
+
+const getRandomHint = async () => {
+  const resp = await getHints(modalGenericMessage);
+  if (!resp.status) {
+    return { status: resp.status };
+  }
+
+  const random = Math.floor(Math.random() * resp.content.sets.length);
+  emit('update-game-state', { status: resp.status,
+                              typeState: TypeStates.GAME.name,
+                              gameState: GameStates.IGNORE.name,
+                              data: {action: 'hint', hintedCards: resp.content.sets[random]},
                               from: [componentName.value] });
 
   return { status: true };
