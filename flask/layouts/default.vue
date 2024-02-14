@@ -1,20 +1,10 @@
 <template>
 
   <BNavbar toggleable="lg" type="light" variant="light">
+    <BNavbarBrand href="#">pySET</BNavbarBrand>
     <BNavbarToggle target="nav-collapse" />
 
     <BCollapse id="nav-collapse" is-nav>
-      <BNavbarNav class="me-auto mb-2 mb-lg-0">
-        <BNavItem>
-          <PlayerCRUD :gameState="gameState"
-                      :playerState="playerState"
-
-                      :playersStats="playersStats"
-
-                      @update-player-state="updatePlayerStateHandler($event)"/>
-        </BNavItem>
-      </BNavbarNav>
-
       <HRControl :gameState="gameState"
                  :playerState="playerState"
 
@@ -44,7 +34,21 @@
       </BCard>
 
       <BCard title="Scores">
-        <PlayerScore :playersStats="playersStats"/>
+        <PlayerCRUD :gameState="gameState"
+                    :playerState="playerState"
+
+                    :playersStats="playersStats"
+
+                    @update-player-state="updatePlayerStateHandler($event)"/>
+
+        <div class="mt-3"></div>
+
+        <PlayerScore :gameState="gameState"
+                     :playerState="playerState"
+
+                     :playersStats="playersStats"
+
+                     @update-player-state="updatePlayerStateHandler($event)"/>
       </BCard >
     </BCardGroup>
 
@@ -78,7 +82,7 @@ config.value = await useState('config').value.then(r => r);
 const modalGenericMessage = ref({triggerModal: false, modalTitle: '', modalMessage: ''});
 
 const gameState = ref(GameStates.NEW.name);
-const playerState = ref(PlayerStates.IDLE.name);
+const playerState = ref(PlayerStates.UPDATE.name);
 
 const selectedPlayer = ref('');
 const playersStats = ref([{ name: "John",

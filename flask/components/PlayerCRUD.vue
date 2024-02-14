@@ -1,14 +1,6 @@
 <template>
 
   <div class="is-flex">
-    <BDropdown text="Remove player" variant="" :disabled="disableRemove">
-      <BDropdownItem  v-for="val in props.playersStats" :key="val.name" :title="val.name" @click="prepareRemove(val.name)">
-        <span>
-          <p class="mdi mdi-trash-can" aria-hidden="true">{{ val.name }}</p>
-        </span>
-      </BDropdownItem >
-    </BDropdown>
-
     <BButton variant="success" @click="prepareAdd()" :disabled="disableAdd">
       <i class="mdi mdi-plus-circle-outline"></i>
       Add player
@@ -17,16 +9,13 @@
 
   <b-modal v-model="modalPlayerUpdate.do"
            :title="modalPlayerUpdate.modalTitle"
-           :ok-disabled="modalPlayerUpdate.action == 'add' && !validPlayer"
+           :ok-disabled="!validPlayer"
            @ok="updatePlayersStats()"
-           @cancel="modalPlayerUpdate.do = false; playerName = ''"
+           @cancel="modalPlayerUpdate.do = false; playerName = ''; playerColor = '#000000'"
            @close="modalPlayerUpdate.do = false">
-    <div v-if="modalPlayerUpdate.action=='add'" class="is-flex">
+    <div class="is-flex">
       <BFormInput v-model="playerName" :state="validPlayerName && uniquePlayerName" type="text" placeholder="Player name"/>
       <BFormInput v-model="playerColor" :state="validPlayerColor && uniquePlayerColor" type="color"/>
-    </div>
-    <div v-if="modalPlayerUpdate.action=='remove'">
-      Remove player {{ modalPlayerUpdate.player.name }}?
     </div>
   </b-modal>
 
@@ -38,7 +27,7 @@
 
 <script setup>
 import { ref, computed, onBeforeMount, onMounted } from "vue";
-import { removePlayer, addPlayer } from "~/assets/webAppAPI.js";
+import { addPlayer } from "~/assets/webAppAPI.js";
 import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
 
 // ##################
@@ -61,9 +50,6 @@ config.value = await useState('config').value.then(r => r);
 const modalGenericMessage = ref({triggerModal: false, modalTitle: '', modalMessage: ''});
 const modalPlayerUpdate = ref({ do: false, modalTitle: '', modalMessage: '', action: '', player: { name: '' } });
 
-const disableRemove = computed(() => (props.playersStats.length == 0 ||
-                                      props.gameState != GameStates.NEW.name ||
-                                      props.playerState == PlayerStates.LOCKED.name));
 const disableAdd = computed(() => (props.playersStats.length == config.value.MAX_PLAYERS ||
                                    props.gameState != GameStates.NEW.name ||
                                    props.playerState == PlayerStates.LOCKED.name));
@@ -95,7 +81,6 @@ onBeforeMount(() => { });
 
 onMounted(async () => {
   componentName.value = getCurrentInstance().type.__name;
-  await updatePlayersStats();
 });
 
 // ###################
@@ -119,13 +104,6 @@ const resetValues = () => {
 // #####  FUNCS  #####
 // ###################
 
-const prepareRemove = (playerName) => {
-  modalPlayerUpdate.value.action = 'remove';
-  modalPlayerUpdate.value.modalTitle = modalPlayerUpdate.value.action.toUpperCase();
-  modalPlayerUpdate.value.player.name = playerName;
-  modalPlayerUpdate.value.do = true;
-};
-
 const prepareAdd = () => {
   modalPlayerUpdate.value.action = 'add';
   modalPlayerUpdate.value.modalTitle = modalPlayerUpdate.value.action.toUpperCase();
@@ -140,28 +118,9 @@ const prepareAdd = () => {
 const updatePlayersStats = async () => {
   modalPlayerUpdate.value.do = false;
 
-  const updateBody = { name: playerName.value, color: playerColor.value };
   let resp = { status: false };
 
-  if (modalPlayerUpdate.value.action == 'add') {
-    if (updateBody.name.length <= 2) {
-      modalGenericMessage.value.modalTitle = 'Error input';
-      modalGenericMessage.value.modalMessage = 'Invalid player name';
-      modalGenericMessage.value.triggerModal = true;
-      return resp;
-    }
-
-    resp = await addPlayer(modalGenericMessage, updateBody);
-  }
-
-  else if (modalPlayerUpdate.value.action == 'remove') {
-    updateBody.name = modalPlayerUpdate.value.player.name;
-    resp = await removePlayer(modalGenericMessage, updateBody);
-  }
-
-  else {
-    resp.status = true;
-  }
+  resp = await addPlayer(modalGenericMessage, { name: playerName.value, color: playerColor.value });
 
   resetValues();
 
