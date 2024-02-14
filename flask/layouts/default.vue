@@ -1,15 +1,17 @@
 <template>
 
   <BNavbar toggleable="lg" type="light" variant="light">
-    <BNavbarBrand href="#">pySET</BNavbarBrand>
+    <BNavbarBrand href="#"><h1>pySET</h1></BNavbarBrand>
     <BNavbarToggle target="nav-collapse" />
 
     <BCollapse id="nav-collapse" is-nav>
-      <HRControl :gameState="gameState"
-                 :playerState="playerState"
+      <BNavbarNav class="ms-auto mb-2 mb-lg-0">
+        <HRControl :gameState="gameState"
+                   :playerState="playerState"
 
-                 @update-player-state="updatePlayerStateHandler($event)"
-                 @update-game-state="updateGameStateHandler($event)"/>
+                   @update-player-state="updatePlayerStateHandler($event)"
+                   @update-game-state="updateGameStateHandler($event)"/>
+      </BNavbarNav>
     </BCollapse>
   </BNavbar>
 
