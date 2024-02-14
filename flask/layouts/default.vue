@@ -35,7 +35,7 @@
                  @update-game-state="updateGameStateHandler($event)"/>
       </BCard>
 
-      <BCard title="Scores">
+      <BCard :title="playersStats.length <= 1 ? 'PLAYER' : 'PLAYERS'">
         <PlayerCRUD :gameState="gameState"
                     :playerState="playerState"
 

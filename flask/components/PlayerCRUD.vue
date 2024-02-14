@@ -93,6 +93,7 @@ const updateGenericModalMessage = (ev) => {
 
 const resetValues = () => {
   playerName.value = '';
+  playerColor.value = '#000000';
 
   modalPlayerUpdate.value.do = false;
   modalPlayerUpdate.value.modalTitle = '';
