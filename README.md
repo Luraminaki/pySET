@@ -34,7 +34,7 @@ Open a new terminal in the directory `pySET` and activate the `.venv` previously
 - Unix or MacOS
 
 ```sh
-source .venv/Scriptsactivate
+source .venv/bin/activate
 ```
 
 Once activated, you can run the project with either
