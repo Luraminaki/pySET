@@ -2,18 +2,40 @@
 
   <b-accordion>
     <b-accordion-item v-for="val in props.playersStats" :key="val.name" :title="val.name">
-      <BButton :style="`background-color: ${val.color}`">Player: {{ val.name }}</BButton>
-      <p>Type: {{ val.is_ai ? "AI" : "Human" }}</p>
-      <p v-if="val.is_ai">Difficulty: {{ val.difficulty.level.toUpperCase() }}</p>
-      <p>Submited: {{ val.calls }}</p>
-      <p>Valid submit: {{ val.number_valid_sets }}</p>
-      <p>Failed submit: {{ val.number_invalid_sets }}</p>
-      <p>Timings: {{ val.answers_time }}</p>
-      <p>Average: {{ val.average_answers_time }}</p>
-      <p>SET found: {{ val.valid_sets }}</p>
-      <BButton v-if="showRemove" @click="prepareRemove(val.name)" :disabled="disableRemove" size="sm" variant="warning">
-        <p class="mdi mdi-trash-can" aria-hidden="true" style="margin-bottom: 0px;">DELETE PLAYER</p>
-      </BButton>
+      <li>
+        <p>Player Color: <BButton :style="`background-color: ${val.color}`"></BButton></p>
+      </li>
+      <li>
+        <p>Type: {{ val.is_ai ? "AI" : "Human" }}</p>
+      </li>
+      <li v-if="val.is_ai">
+        <p>Difficulty: {{ val.difficulty.level.toUpperCase() }}</p>
+      </li>
+      <li>
+        <p>Submited: {{ val.calls }}</p>
+      </li>
+      <li>
+        <p>Valid submit: {{ val.number_valid_sets }}</p>
+      </li>
+      <li>
+        <p>Failed submit: {{ val.number_invalid_sets }}</p>
+      </li>
+      <li>
+        <p>Timings: {{ val.answers_time }}</p>
+      </li>
+      <li>
+        <p>Average: {{ val.average_answers_time }}</p>
+      </li>
+      <li>
+        <p>SET found: {{ val.valid_sets }}</p>
+      </li>
+      <li v-if="showRemove">
+        <p>
+          <BButton @click="prepareRemove(val.name)" :disabled="disableRemove" size="sm" variant="warning">
+            <p class="mdi mdi-trash-can" aria-hidden="true" style="margin-bottom: 0px;">DELETE PLAYER</p>
+          </BButton>
+        </p>
+      </li>
     </b-accordion-item>
   </b-accordion>
 
@@ -25,7 +47,7 @@
            :title="modalPlayerUpdate.modalTitle"
            @ok="updatePlayersStats()"
            @cancel="modalPlayerUpdate.do = false;"
-           @close="modalPlayerUpdate.do = false">
+           @close="modalPlayerUpdate.do = false">{{ modalPlayerUpdate.modalMessage }}
   </b-modal>
 
 </template>
@@ -77,6 +99,7 @@ const updateGenericModalMessage = (ev) => {
 
 const resetValues = () => {
   modalPlayerUpdate.value.do = false;
+  modalPlayerUpdate.value.modalMessage = '';
   modalPlayerUpdate.value.modalTitle = '';
   modalPlayerUpdate.value.action = '';
   modalPlayerUpdate.value.player.name = '';
@@ -88,6 +111,7 @@ const resetValues = () => {
 
 const prepareRemove = (playerName) => {
   modalPlayerUpdate.value.action = 'remove';
+  modalPlayerUpdate.value.modalMessage = `Remove player ${playerName}?`;
   modalPlayerUpdate.value.modalTitle = modalPlayerUpdate.value.action.toUpperCase();
   modalPlayerUpdate.value.player.name = playerName;
   modalPlayerUpdate.value.do = true;
