@@ -92,4 +92,11 @@ const toggleCard = async (toggleType) => {
   border-left-width: 3px;
   border-right-width: 3px;
 }
+
+.card:hover {
+  border-top-width: 3px !important;
+  border-bottom-width: 3px !important;
+  border-left-width: 3px !important;
+  border-right-width: 3px !important;
+}
 </style>
