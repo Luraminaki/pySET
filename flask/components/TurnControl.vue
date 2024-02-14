@@ -2,8 +2,9 @@
 
   <div class="mt-4 is-flex">
     <BButton :variant="buttonGameStateFlavor.variant" @click="changeGameStateRequest()" :disabled="!canToggleGameState">{{ buttonGameStateFlavor.text }}</BButton>
-    <BButton variant="info" @click="selectSubmittingPlayer()" :disabled="!canCallSet">SET !</BButton>
-    <BButton variant="outline-success" @click="sendSelection(selectedPlayer)" :disabled="!canSendSet">Submit SET</BButton>
+    <BButton :variant="setCalled ? 'outline-success' : 'info'"
+             @click="setCalled ? sendSelection(selectedPlayer) : selectSubmittingPlayer()"
+             :disabled="setCalled ? !canSendSet : !canCallSet">{{ setCalled ? 'Submit SET' : 'SET !' }}</BButton>
   </div>
 
   <b-modal v-model="modalSelectPlayer.do" :title="modalSelectPlayer.modalTitle" @hide.prevent hide-footer>
@@ -21,7 +22,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onBeforeMount, onMounted } from "vue";
+import { ref, computed, onBeforeMount, onMounted, watch } from "vue";
 import { changeGameState, submitSet } from "~/assets/webAppAPI.js";
 import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
 
@@ -56,6 +57,8 @@ const canSendSet = computed(() => (props.playerState == PlayerStates.SUBMITTING.
                                    props.gameState == GameStates.RUNNING.name &&
                                    props.playersStats.length != 0 &&
                                    props.selectedCards.length == 3));
+
+const setCalled = ref(false);
 
 // Start - Pause button cosmetic changes
 const buttonGameStateFlavor = computed(() => {
@@ -93,6 +96,15 @@ onBeforeMount(() => { });
 onMounted(async () => {
   componentName.value = getCurrentInstance().type.__name;
 });
+
+// https://stackoverflow.com/questions/59125857/how-to-watch-props-change-with-vue-composition-api-vue-3
+watch(
+  () => props.playerState, async (newValue, oldValue) => {
+    if (newValue != PlayerStates.SUBMITTING.name && oldValue == PlayerStates.SUBMITTING.name) {
+      setCalled.value = false;
+    }
+  }
+);
 
 // ###################
 // #####   GUI   #####
@@ -133,8 +145,6 @@ const selectSubmittingPlayer = async () => {
 const proceedWithSelectedPlayer = async (playerName) => {
   modalSelectPlayer.value.do = false;
 
-  selectedPlayer.value = playerName;
-
   if(props.gameState == GameStates.PAUSED.name) {
     const respGameState = await changeGameStateRequest();
     if (!respGameState.status) {
@@ -142,6 +152,9 @@ const proceedWithSelectedPlayer = async (playerName) => {
       return { status: respGameState.status };
     }
   }
+
+  selectedPlayer.value = playerName;
+  setCalled.value = true;
 
   emit('update-player-state', { status: true,
                                 typeState: TypeStates.PLAYER.name,
@@ -181,7 +194,10 @@ const sendSelection = async (playerName) => {
                               from: [componentName.value] });
 
   const respSubmit = await submitSet(modalGenericMessage, { playerName: playerName, set: props.selectedCards });
+
+  setCalled.value = false;
   selectedPlayer.value = '';
+
   if (!respSubmit.status){
     return { status: respSubmit.status };
   }
