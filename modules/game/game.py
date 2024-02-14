@@ -72,7 +72,7 @@ class Game():
         return copy.deepcopy(self._players)
 
 
-    def add_player(self, player_name: str, is_ai: bool=False, difficulty: dict=None) -> dict:
+    def add_player(self, player_name: str, player_color: str='#000000', is_ai: bool=False, difficulty: dict=None) -> dict:
         if player_name is None:
             return { 'status': False, 'players': self.get_players(), 'error': 'PLAYER_NAME_IS_NONE' }
 
@@ -86,7 +86,7 @@ class Game():
         if player is not None:
             return { 'status': False, 'players':self.get_players(), 'error': 'PLAYER_NAME_ALREADY_EXISTS' }
 
-        self._players.append(Player(player_name, is_ai, difficulty))
+        self._players.append(Player(player_name, player_color, is_ai, difficulty))
         self._players[-1].fold_cards_if_possible = self.grid.fold_cards_if_possible
 
         return { 'status': True, 'players': self.get_players(), 'error': '' }

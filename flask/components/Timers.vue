@@ -4,7 +4,7 @@
     <div>
       <p>Penalty time</p>
       <BProgress>
-        <BProgressBar v-for="(_, index) in props.playersStats" :value="playersBarPenaltyProgress[index]" :variant="variantsPenaltyProgress[index]" />
+        <BProgressBar v-for="(_, index) in props.playersStats" :value="playersBarPenaltyProgress[index]" :style="`background-color:${variantsPenaltyProgress[index]}`" />
       </BProgress>
     </div>
 
@@ -61,8 +61,8 @@ const submitTimeoutVariant = computed(() => {
   }
 });
 
-const variantsPenaltyProgress = ref(['danger', 'warning', 'info', '']);
-const playersTimerPenaltyProgress = ref([0, 0, 0, 0]);
+const variantsPenaltyProgress = computed(() => { return props.playersStats.map(player => player.color) });
+const playersTimerPenaltyProgress = ref(Array.from({length: config.value.MAX_PLAYERS}, (_, __) => 0));
 const playersBarPenaltyProgress = computed(() => {
   const pbpp = [];
 

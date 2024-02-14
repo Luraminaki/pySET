@@ -116,11 +116,12 @@ class ViewModelApp():
             return { 'status': StatusFunction.ERROR.name, 'players_stats': [], 'game_state': self.set_game.get_game_state(), 'error': 'Not allowed: Game is running' }
 
         player_name = data.get('name', '')[:self.config['PLAYER_NAME_MAX_CHARS']]
+        player_color = data.get('color', '#000000')
 
         if len(player_name) <= 2:
             return { 'status': StatusFunction.ERROR.name, 'players_stats': [], 'game_state': self.set_game.get_game_state(), 'error': 'Invalid player name' }
 
-        resp = self.set_game.add_player(player_name=player_name)
+        resp = self.set_game.add_player(player_name=player_name, player_color=player_color)
 
         status = StatusFunction.SUCCESS.name if resp.get('status', False) else StatusFunction.ERROR.name
         return { 'status': status,

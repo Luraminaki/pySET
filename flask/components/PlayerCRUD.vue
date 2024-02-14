@@ -17,13 +17,14 @@
 
   <b-modal v-model="modalPlayerUpdate.do"
            :title="modalPlayerUpdate.modalTitle"
-           :ok-disabled="modalPlayerUpdate.action == 'add' && (!validPlayerName || !uniquePlayerName)"
+           :ok-disabled="modalPlayerUpdate.action == 'add' && !validPlayer"
            @ok="updatePlayersStats()"
            @cancel="modalPlayerUpdate.do = false; playerName = ''"
            @close="modalPlayerUpdate.do = false">
-    <b-form-group v-if="modalPlayerUpdate.action=='add'">
+    <div v-if="modalPlayerUpdate.action=='add'" class="is-flex">
       <BFormInput v-model="playerName" :state="validPlayerName && uniquePlayerName" type="text" placeholder="Player name"/>
-    </b-form-group>
+      <BFormInput v-model="playerColor" :state="validPlayerColor && uniquePlayerColor" type="color"/>
+    </div>
     <div v-if="modalPlayerUpdate.action=='remove'">
       Remove player {{ modalPlayerUpdate.player.name }}?
     </div>
@@ -67,12 +68,23 @@ const disableAdd = computed(() => (props.playersStats.length == config.value.MAX
                                    props.gameState != GameStates.NEW.name ||
                                    props.playerState == PlayerStates.LOCKED.name));
 
+const playerColor = ref('#000000');
+const uniquePlayerColor = computed(() => (props.playersStats.filter(findPlayerByColor).length == 0));
+const validPlayerColor = computed(() => (playerColor.value != ''));
+
 const playerName = ref('');
 const uniquePlayerName = computed(() => (props.playersStats.filter(findPlayerByName).length == 0));
 const validPlayerName = computed(() => (playerName.value.length > 2 && playerName.value.length <= config.value.PLAYER_NAME_MAX_CHARS));
 
+const validPlayer = computed(() => (validPlayerName.value && uniquePlayerName.value &&
+                                    validPlayerColor.value && uniquePlayerColor.value))
+
 function findPlayerByName(player, index) {
   return player.name == playerName.value;
+}
+
+function findPlayerByColor(player, index) {
+  return player.color == playerColor.value;
 }
 
 // ##################
@@ -128,7 +140,7 @@ const prepareAdd = () => {
 const updatePlayersStats = async () => {
   modalPlayerUpdate.value.do = false;
 
-  const updateBody = { name: playerName.value };
+  const updateBody = { name: playerName.value, color: playerColor.value };
   let resp = { status: false };
 
   if (modalPlayerUpdate.value.action == 'add') {
