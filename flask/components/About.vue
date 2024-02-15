@@ -6,6 +6,19 @@
          tag="article">
     <BCardText>
 
+      <h2>pySET QUICK START</h2>
+      <ul>
+        <li><p>Press <b>⊕ Add player</b> to add player to the game (input a player name and a color). The game will not start without at least one player.</p></li>
+        <li><p>To delete a player, click on the player name, and hit the <b>DELETE PLAYER</b> button.</p></li>
+        <li><p>Press <b>START</b> to initiate the game and reveal the cards.</p></li>
+        <li><p>Press <b>PAUSE</b> to pause the game and hide the cards.</p></li>
+        <li><p>Press <b>RESUME</b> to resume the game where you left it.</p></li>
+        <li><p>Press <b>HINT</b> to reveal a valid SET.</p></li>
+        <li><p>Press <b>SET!</b> if you have found a valid set of cards, click on the cards before the submitting timer runs out, and press <b>Submit SET</b> when done selecting.</p></li>
+        <li><p>Press <b>RESET</b> if you want to reset the game (<b>SOFT</b> will keep the current player(s), <b>HARD</b> will not).</p></li>
+        <li><p>Submitting an invalid SET, or failling in submitting a SET on time will result in a penalty: Future SET submition will refresh the penalty <b>ONLY IF</b> the aforementioned penalised player is still under the penalty.</p></li>
+      </ul>
+
       <h2>HISTORY</h2>
       <ul>
         <p><b>SET!</b> is a real-time card game designed by <b>Marsha Falco</b> in 1974.</p>
@@ -29,7 +42,7 @@
         <li><p>They all have the same color or have three different colors.</p></li>
       </ul>
 
-      <h2>TL;DR</h2>
+      <h3>TL;DR</h3>
       <ul>
         <p>The rules of <b>SET!</b> are summarized by: If you can sort a group of three cards into "two of ____ and one of ____", then it is <b>not</b> a set.</p>
       </ul>

@@ -4,7 +4,7 @@
     <BButton :variant="buttonGameStateFlavor.variant" @click="changeGameStateRequest()" :disabled="!canToggleGameState">{{ buttonGameStateFlavor.text }}</BButton>
     <BButton :variant="setCalled ? 'outline-success' : 'info'"
              @click="setCalled ? sendSelection(selectedPlayer) : selectSubmittingPlayer()"
-             :disabled="setCalled ? !canSendSet : !canCallSet">{{ setCalled ? 'Submit SET' : 'SET !' }}</BButton>
+             :disabled="setCalled ? !canSendSet : !canCallSet">{{ setCalled ? 'Submit SET' : 'SET!' }}</BButton>
     <BButton variant="outline-primary"
              @click="getRandomHint()"
              :disabled="disableHint">HINT</BButton>
