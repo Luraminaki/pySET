@@ -4,7 +4,7 @@
          :img-src="`/cards/${props.card}.png`"
          :img-alt="props.card"
          :id="`card-${props.card}`"
-         @click="toggleCard('card border-primary is-thick')"/>
+         @click="toggleCard('card border-primary')"/>
 
 </template>
 
@@ -43,7 +43,7 @@ watch(
     if (newValue == 'hint') {
       if (props.cardsEvent.cards.includes(props.card)) {
         cardIsSelected.value = false;
-        await toggleCard("card border-success is-thick");
+        await toggleCard("card border-success");
       }
     }
     else if (newValue == 'untoggle-request') {
@@ -86,17 +86,15 @@ const toggleCard = async (toggleType) => {
 </script>
 
 <style scoped>
-.is-thick {
-  border-top-width: 3px;
-  border-bottom-width: 3px;
-  border-left-width: 3px;
-  border-right-width: 3px;
-}
-
-.card:hover {
+.card {
   border-top-width: 3px !important;
   border-bottom-width: 3px !important;
   border-left-width: 3px !important;
   border-right-width: 3px !important;
+  margin-block:2px !important;
+}
+
+.card:hover {
+  border-color: cyan !important;
 }
 </style>
