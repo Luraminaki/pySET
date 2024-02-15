@@ -1,8 +1,8 @@
 <template>
 
   <div class="is-flex">
-    <p>Drawing pile: {{ drawPile }} card(s)</p>
-    <p>Hint(s) requested: {{ hintsRequested }}</p>
+    <p>Drawing pile: {{ drawPile }} {{ drawPile > 1 ? "cards" : "card" }}</p>
+    <p>{{ hintsRequested > 1 ? "Hints" : "Hint" }} requested: {{ hintsRequested }}</p>
   </div>
 
   <Timers :gameState="props.gameState"
