@@ -28,6 +28,10 @@
     </div>
   </b-modal>
 
+  <b-modal v-model="modalAbout.do" :title="modalAbout.modalTitle" @ok="modalAbout.do = false" @cancel="modalAbout.do = false" @close="modalAbout.do = false" ok-only scrollable>
+    <About/>
+  </b-modal>
+
   <div :v-model="modalGenericMessage">
     <ModalGenericMessage :modalGenericMessage="modalGenericMessage" @trigger-updated="updateGenericModalMessage($event)"/>
   </div>
@@ -53,8 +57,8 @@ const componentName = ref('');
 const emit = defineEmits(['update-player-state', 'update-game-state']);
 
 const modalGenericMessage = ref({triggerModal: false, modalTitle: '', modalMessage: ''});
-
 const modalReset = ref({ do: false, modalTitle: 'Reset game?', modalMessage: '' });
+const modalAbout = ref({ do: false, modalTitle: 'About SET!', modalMessage: '' });
 
 const disableReset = computed(() => (props.gameState == GameStates.NEW.name ||
                                      props.playerState == PlayerStates.LOCKED.name))
@@ -92,6 +96,7 @@ const resetValues = () => {
 // ###################
 
 const getHelp = async () => {
+  modalAbout.value.do = true;
   return { status: true };
 };
 
