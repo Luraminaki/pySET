@@ -74,7 +74,7 @@ const buttonGameStateFlavor = computed(() => {
       flavor.variant = 'warning'; flavor.text = 'PAUSE';
       break;
     case GameStates.PAUSED.name:
-      flavor.variant = 'success'; flavor.text = 'START';
+      flavor.variant = 'success'; flavor.text = 'RESUME';
       break;
     case GameStates.NEW.name:
       flavor.variant = 'success'; flavor.text = 'START';
@@ -244,6 +244,10 @@ const sendSelection = async (playerName) => {
 .is-flex {
   display: flex;
   flex-direction: row;
-  justify-content: space-around;
+  justify-content: space-between;
+}
+
+.btn {
+  width: 30% !important;
 }
 </style>
