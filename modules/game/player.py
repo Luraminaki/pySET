@@ -43,7 +43,7 @@ class Player():
         if found_valid:
             self._found_sets.append(card_set)
             self._set_called = self._set_called + 1
-            self._set_found_elapsed_time.append(time.time() - timer)
+            self._set_found_elapsed_time.append(int(time.time() - timer))
 
         else:
             self.apply_penalty()

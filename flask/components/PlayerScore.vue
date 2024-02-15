@@ -12,23 +12,20 @@
         <p>Difficulty: {{ val.difficulty.level.toUpperCase() }}</p>
       </li>
       <li>
-        <p>Submited: {{ val.calls }}</p>
-      </li>
-      <li>
         <p>Valid submit: {{ val.number_valid_sets }}</p>
       </li>
       <li>
         <p>Failed submit: {{ val.number_invalid_sets }}</p>
       </li>
       <li>
+        <p>Average submit time: {{ val.average_answers_time }} seconds</p>
+      </li>
+      <!-- <li>
         <p>Timings: {{ val.answers_time }}</p>
       </li>
       <li>
-        <p>Average: {{ val.average_answers_time }}</p>
-      </li>
-      <li>
         <p>SET found: {{ val.valid_sets }}</p>
-      </li>
+      </li> -->
       <li v-if="showRemove">
         <p>
           <BButton @click="prepareRemove(val.name)" :disabled="disableRemove" size="sm" variant="warning">
