@@ -4,7 +4,7 @@ Fun project where I could cram in some of the knowledge I gained from coding in 
 
 ## VERSIONS
 
-- 0.1.0: First release (Beta)
+- 0.1.0-alpha: First release
 
 ## TABLE OF CONTENT
 

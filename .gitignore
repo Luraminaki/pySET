@@ -8,6 +8,8 @@ flask/dist
 *.pyc
 .venv/
 .venv
+.venv.lnk
 gunicorn/*.pem
 gunicorn/*.crt
 gunicorn/*.key
+*.zip

@@ -1,6 +1,6 @@
 {
   "name": "pyset",
-  "license":"LGPL-3.0-or-later",
+  "license": "LGPL-3.0-or-later",
   "private": true,
   "scripts": {
     "build": "nuxt build",
@@ -19,9 +19,10 @@
     "nuxt": "^3.0",
     "sass": "^1.0",
     "sass-loader": "^14.0",
-    "vue": "^3.0",
     "vite": "^5.0",
+    "vue": "^3.0",
     "webpack": "^5.0"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "version": "0.0.0"
 }
