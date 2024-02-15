@@ -61,9 +61,9 @@ docker build -t pyset:0.1 .
 docker run -d -p 5000:5000 pyset:0.1
 ```
 
-## FUTURE UPDATES
+## POSSIBLE FUTURE UPDATES
 
-- Improve GUI (Player score particularly)
-- Handle multiple clients
 - "AI" player(s)
+- Handle multiple clients (different screens)
+- Handle multiple game session at the same time
 - Testing scripts

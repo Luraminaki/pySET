@@ -1,34 +1,31 @@
 <template>
 
   <b-accordion>
-    <b-accordion-item v-for="val in props.playersStats" :key="val.name" :title="val.name">
+    <b-accordion-item v-for="playersStat in props.playersStats" :key="playersStat.name" :title="playersStat.name">
       <li>
-        <p>Player Color: <BButton :style="`background-color: ${val.color}`"></BButton></p>
-      </li>
-      <li>
-        <p>Type: {{ val.is_ai ? "AI" : "Human" }}</p>
-      </li>
-      <li v-if="val.is_ai">
-        <p>Difficulty: {{ val.difficulty.level.toUpperCase() }}</p>
+        <p>Player Color: <BButton :style="`background-color: ${playersStat.color}`"></BButton></p>
       </li>
       <li>
-        <p>Valid submit: {{ val.number_valid_sets }}</p>
+        <p>Type: {{ playersStat.is_ai ? "AI" : "Human" }}</p>
+      </li>
+      <li v-if="playersStat.is_ai">
+        <p>Difficulty: {{ playersStat.difficulty.level.toUpperCase() }}</p>
       </li>
       <li>
-        <p>Failed submit: {{ val.number_invalid_sets }}</p>
+        <p>Valid {{ playersStat.number_valid_sets > 1 ? 'submits' : 'submit' }}: {{ playersStat.number_valid_sets }}</p>
       </li>
       <li>
-        <p>Average submit time: {{ val.average_answers_time }} seconds</p>
-      </li>
-      <!-- <li>
-        <p>Timings: {{ val.answers_time }}</p>
+        <p>Failed {{ playersStat.number_invalid_sets > 1 ? 'submits' : 'submit' }}: {{ playersStat.number_invalid_sets }}</p>
       </li>
       <li>
-        <p>SET found: {{ val.valid_sets }}</p>
-      </li> -->
+        <p>Average submit time: {{ playersStat.average_answers_time }} seconds</p>
+      </li>
+      <li v-if="playersStat.number_valid_sets > 0">
+        <ScoreDetails :playersStat="playersStat"/>
+      </li>
       <li v-if="showRemove">
         <p>
-          <BButton @click="prepareRemove(val.name)" :disabled="disableRemove" size="sm" variant="warning">
+          <BButton @click="prepareRemove(playersStat.name)" :disabled="disableRemove" size="sm" variant="warning">
             <p class="mdi mdi-trash-can" aria-hidden="true" style="margin-bottom: 0px;">DELETE PLAYER</p>
           </BButton>
         </p>

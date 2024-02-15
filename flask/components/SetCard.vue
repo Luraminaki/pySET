@@ -4,7 +4,7 @@
          :img-src="`/cards/${props.card}.png`"
          :img-alt="props.card"
          :id="`card-${props.card}`"
-         @click="toggleCard('card border-primary')"/>
+         @click="toggleCard('card border-info')"/>
 
 </template>
 
@@ -43,7 +43,7 @@ watch(
     if (newValue == 'hint') {
       if (props.cardsEvent.cards.includes(props.card)) {
         cardIsSelected.value = false;
-        await toggleCard("card border-success");
+        await toggleCard("card border-warning");
       }
     }
     else if (newValue == 'untoggle-request') {
