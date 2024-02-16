@@ -30,6 +30,7 @@ import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
 // ##################
 
 const props = defineProps({
+  gameID: { type: String, required: true },
   gameState: { type: String, required: true },
   playerState: { type: String, required: true },
   playersStats: { type: Array, required: false, default() { return [] } },
@@ -222,7 +223,7 @@ const sendPlayerPenalty = async () => {
                               data: {action: 'untoggle-request'},
                               from: [componentName.value] });
 
-  const resp = await sendPenalty(modalGenericMessage, { playerName: penalisedPlayer.name });
+  const resp = await sendPenalty(modalGenericMessage, { gameID: props.gameID, playerName: penalisedPlayer.name });
   if (!resp.status) {
     return { status: resp.status };
   }

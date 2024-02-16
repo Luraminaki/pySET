@@ -5,7 +5,8 @@
     <p>{{ hintsRequested > 1 ? "Hints" : "Hint" }} requested: {{ hintsRequested }}</p>
   </div>
 
-  <Timers :gameState="props.gameState"
+  <Timers :gameID="props.gameID"
+          :gameState="props.gameState"
           :playerState = "props.playerState"
           :playersStats="props.playersStats"
           :penalisedPlayer="penalisedPlayer"
@@ -33,7 +34,8 @@
   </BOverlay>
   <!-- /GRID -->
 
-  <TurnControl :gameState="props.gameState"
+  <TurnControl :gameID="props.gameID"
+               :gameState="props.gameState"
                :playerState="props.playerState"
 
                :playersStats="props.playersStats"
@@ -58,10 +60,11 @@ import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
 // ##################
 
 const props = defineProps({
+  gameID: { type: String, required: true },
   gameState: { type: String, required: true },
   playerState: { type: String, required: true },
-  selectedPlayer: { type: String, required: true },
   playersStats: { type: Array, required: false, default() { return [] } },
+  selectedPlayer: { type: String, required: true },
   hintedCards: { type: Array, required: false, default() { return [] } },
 });
 
@@ -241,7 +244,7 @@ const loadGame = async (reload=false) => {
     drawPile.value = 0;
   }
 
-  const resp = await getGame(modalGenericMessage);
+  const resp = await getGame(modalGenericMessage, { gameID: props.gameID });
   if (!resp.status) {
     emit('update-game-state', { status: true,
                                   typeState: TypeStates.GAME.name,

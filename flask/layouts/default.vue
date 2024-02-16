@@ -2,11 +2,15 @@
 
   <BNavbar toggleable="lg" type="light" variant="light">
     <BNavbarBrand href="#"><h1>pySET</h1></BNavbarBrand>
+    <BNavbarNav>
+      <BNavItem>GAME ID: {{ gameID }}</BNavItem>
+    </BNavbarNav>
     <BNavbarToggle target="nav-collapse" />
 
     <BCollapse id="nav-collapse" is-nav>
       <BNavbarNav class="ms-auto mb-2 mb-lg-0">
-        <HRControl :gameState="gameState"
+        <HRControl :gameID="gameID"
+                   :gameState="gameState"
                    :playerState="playerState"
 
                    @update-player-state="updatePlayerStateHandler($event)"
@@ -22,42 +26,32 @@
 
   <div class="mt-2 is-center">
 
-    <BCardGroup deck class="col-8 pt-2">
-      <BCard title="SET">
-        <SetGrid :gameState="gameState"
-                 :playerState="playerState"
+    <b-modal v-model="firstLaunch" title="Create / Join" @hide.prevent hide-footer>
+      <BFormInput v-model="gameID" :state="validGameID" type="text" placeholder="Game ID"/>
+      <BButton class="mt-2" pill :disabled="!validGameID" @click="gameCreateJoin()">
+        CREATE / JOIN
+      </BButton>
+    </b-modal>
 
-                 :selectedPlayer="selectedPlayer"
-                 :playersStats="playersStats"
-                 :hintedCards="hintedCards"
+    <SetGame v-if="!firstLaunch"
+             :gameID="gameID"
+             :gameState="gameState"
+             :playerState="playerState"
 
-                 @update-player-state="updatePlayerStateHandler($event)"
-                 @update-game-state="updateGameStateHandler($event)"/>
-      </BCard>
+             :playersStats="playersStats" 
 
-      <BCard :title="playersStats.length <= 1 ? 'PLAYER' : 'PLAYERS'">
-        <PlayerCRUD :gameState="gameState"
-                    :playerState="playerState"
-
-                    :playersStats="playersStats"
-
-                    @update-player-state="updatePlayerStateHandler($event)"/>
-
-        <div class="mt-3"></div>
-
-        <PlayerScore :gameState="gameState"
-                     :playerState="playerState"
-
-                     :playersStats="playersStats"
-
-                     @update-player-state="updatePlayerStateHandler($event)"/>
-      </BCard >
-    </BCardGroup>
+             @update-player-state="updatePlayerStateHandler($event)"
+             @update-game-state="updateGameStateHandler($event)"/>
 
     <div class="bottom">
       <div>
         <span class="badge bg-dark">version</span>
         <span class="badge bg-info">{{ version }}</span>
+      </div>
+
+      <div>
+        <span class="badge bg-dark">games</span>
+        <span :class="games < maxGames ? 'badge bg-success' : 'badge bg-danger'">{{ games }} / {{ maxGames }}</span>
       </div>
     </div>
 
@@ -68,7 +62,7 @@
 <script setup>
 import { ref, onBeforeMount, onMounted } from "vue";
 import { initConfig, sleep } from "~/assets/helpers.js";
-import { getGameState, getPlayersInfos } from "~/assets/webAppAPI.js";
+import { initSetGame, getRunningGames, getGameState, getPlayersInfos } from "~/assets/webAppAPI.js";
 import { GameStates, PlayerStates } from "~/assets/states.js";
 
 // ##################
@@ -83,10 +77,16 @@ config.value = await useState('config').value.then(r => r);
 
 const modalGenericMessage = ref({triggerModal: false, modalTitle: '', modalMessage: ''});
 
+const games = ref("?");
+const maxGames = ref(10);
+
+const gameID = ref('');
+const validGameID = computed(() => (gameID.value.length > 2 && gameID.value.length <= 36));
+const firstLaunch = ref(true);
+
 const gameState = ref(GameStates.NEW.name);
 const playerState = ref(PlayerStates.UPDATE.name);
 
-const selectedPlayer = ref('');
 const playersStats = ref([{ name: "John",
                             is_ai: false,
                             calls: 0,
@@ -95,8 +95,6 @@ const playersStats = ref([{ name: "John",
                             valid_sets: [],
                             average_answers_time: 0,
                             answers_time: [] }]);
-
-const hintedCards = ref([]);
 
 // ##################
 // #####  NUXT  #####
@@ -107,25 +105,7 @@ onBeforeMount(() => {
 });
 
 onMounted(async () => {
-  try {
-    if(config.value.version) {
-      version.value = config.value.version;
-    }
-    else {
-      throw new Error('Version is undefined');
-    }
-  }
-  catch (error) {
-    version.value = 'Undefined';
-    console.log(`Could not retrieve pySET version from config: ${error}`);
-  }
-
-  const respGame = await getCurrentGameState();
-  gameState.value = respGame.gameState;
-
-  const respPlayers = await getCurrentPlayersStats();
-  playerState.value = respPlayers.status ? PlayerStates.IDLE.name : PlayerStates.LOCKED.name;
-  playersStats.value = respPlayers.playersStats;
+  await checkBackend();
 });
 
 // ###################
@@ -147,11 +127,7 @@ const updatePlayerStateHandler = async (ev) => {
     const resp = await getCurrentPlayersStats()
     playerState.value = resp.status ? PlayerStates.IDLE.name : PlayerStates.LOCKED.name;
     playersStats.value = resp.playersStats;
-    selectedPlayer.value = '';
     return { status: true };
-  }
-  else if (ev.playerState == PlayerStates.SUBMITTING.name) {
-    selectedPlayer.value = ev.data.playerName;
   }
   else {
     await sleep(300); // Mandatory to avoid VUE crashes
@@ -163,11 +139,6 @@ const updatePlayerStateHandler = async (ev) => {
 
 const updateGameStateHandler = async (ev) => {
   console.log(`default -- New signal from: ${ev.from} for: ${ev.typeState} requesting state: ${ev.gameState}`);
-
-  if (ev.data.action == 'hint') {
-    hintedCards.value = ev.data.hintedCards;
-    return { status: true };
-  }
 
   if (ev.gameState == GameStates.ENDED.name) {
     modalGenericMessage.value.modalTitle = 'Game Over';
@@ -186,8 +157,69 @@ const updateGameStateHandler = async (ev) => {
 // ###  WebAppAPI  ###
 // ###################
 
+const checkBackend = async () => {
+  try {
+    if(config.value.version) {
+      version.value = config.value.version;
+      maxGames.value = config.value.MAX_SESSIONS;
+    }
+    else {
+      throw new Error('Version is undefined');
+    }
+  }
+  catch (error) {
+    version.value = 'Undefined';
+    console.log(`Could not retrieve pySET version from config: ${error}`);
+    return { status: false };
+  }
+
+  const resp = await getRunningGames(modalGenericMessage);
+  if (!resp.status){
+    return { status: false };
+  }
+
+  games.value = resp.content.games;
+};
+
+const gameCreateJoin = async () => {
+  const respInit = await initSetGame(modalGenericMessage, { gameID: gameID.value });
+  if (!respInit.status){
+    firstLaunch.value = true;
+    gameID.value = '';
+    return { status: false };
+  }
+
+  const respGame = await getStatesAndStats();
+  if (!respGame.status){
+    firstLaunch.value = true;
+    gameID.value = '';
+    return { status: false };
+  }
+
+  firstLaunch.value = false;
+
+  const resp = await getRunningGames(modalGenericMessage);
+  if (!resp.status){
+    return { status: false };
+  }
+
+  games.value = resp.content.games;
+
+};
+
+const getStatesAndStats = async () => {
+  const respGame = await getCurrentGameState();
+  gameState.value = respGame.gameState;
+
+  const respPlayers = await getCurrentPlayersStats();
+  playerState.value = respPlayers.status ? PlayerStates.IDLE.name : PlayerStates.LOCKED.name;
+  playersStats.value = respPlayers.playersStats;
+
+  return { status: respGame.status && respPlayers.status }
+};
+
 const getCurrentGameState = async () => {
-  const resp = await getGameState(modalGenericMessage);
+  const resp = await getGameState(modalGenericMessage, { gameID: gameID.value });
   if (!resp.status) {
     return { status: resp.status, gameState: GameStates.UNDEFINED.name };
   }
@@ -195,7 +227,7 @@ const getCurrentGameState = async () => {
 };
 
 const getCurrentPlayersStats = async () => {
-  const resp = await getPlayersInfos(modalGenericMessage);
+  const resp = await getPlayersInfos(modalGenericMessage, { gameID: gameID.value });
   if (!resp.status) {
     return { status: resp.status, playersStats: [] };
   }

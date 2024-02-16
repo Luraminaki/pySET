@@ -5,6 +5,7 @@ Fun project where I could cram in some of the knowledge I gained from coding in 
 ## VERSIONS
 
 - 0.1.0-alpha: First release
+- 0.2.0-alpha: Multiple Game Sessions
 
 ## TABLE OF CONTENT
 
@@ -94,5 +95,4 @@ docker run -d -p 5000:5000 pyset:0.1
 
 - "AI" player(s)
 - Handle multiple clients (different screens)
-- Handle multiple game session at the same time
 - Testing scripts

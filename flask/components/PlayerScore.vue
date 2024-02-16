@@ -56,6 +56,7 @@ import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
 // ##################
 
 const props = defineProps({
+  gameID: { type: String, required: true },
   gameState: { type: String, required: true },
   playerState: { type: String, required: true },
   playersStats: { type: Array, required: false, default() { return [] } },
@@ -118,7 +119,7 @@ const prepareRemove = (playerName) => {
 const updatePlayersStats = async () => {
   modalPlayerUpdate.value.do = false;
 
-  const resp = await removePlayer(modalGenericMessage, { name: modalPlayerUpdate.value.player.name });
+  const resp = await removePlayer(modalGenericMessage, { gameID: props.gameID, name: modalPlayerUpdate.value.player.name });
 
   resetValues();
 

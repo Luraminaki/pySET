@@ -31,6 +31,7 @@ class GameState(enum.Enum):
     RUNNING = enum.auto()
     PAUSED = enum.auto()
     ENDED = enum.auto()
+    UNDEFINED = enum.auto()
 
 
 class Game():

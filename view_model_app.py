@@ -8,6 +8,8 @@ Created on Wed Jan 25 11:17:51 2023
 """
 
 #===================================================================================================
+import time
+import typing
 import inspect
 import logging
 
@@ -41,12 +43,72 @@ class ViewModelApp():
 
         self.logger.info('%s version %s', self.__class__.__name__, __version__)
 
-        self.set_game = Game(Grid())
-        self.set_game.set_penalty_time(self.config.get('PENALTY_TIMEOUT_SECONDS', 20))
-        self.set_game.set_max_player(self.config.get('MAX_PLAYERS', 4))
+        self.set_games: dict[str, dict[str, typing.Union[Game, int]]] = {}
 
-        self.ack = {"01": "DATA_RECIEVED"}
-        self.errors = {"01": "PARAMS_ERROR"}
+        self.ack = {"01": "DATA_RECIEVED",
+                    "02": "DELETING_GAME",
+                    "03": "DELETING_GAME_TTL_REACHED",
+                    "04": "ORDER_66"}
+        self.errors = {"01": "PARAMS_ERROR",
+                       "02": "MAX_SESSIONS_REACHED",
+                       "03": "INVALID_GAME_ID",
+                       "04": "GAME_ID_ALREADY_EXISTS",
+                       "05": "GAME_ID_DOES_NOT_EXIST",
+                       "06": "NOT_ALLOWED",
+                       "07": "INVALID_PLAYER_NAME",
+                       "08": "PLAYER_NOT_FOUND",
+                       "09": "SET_NOT_FOUND"}
+
+
+    ################################################
+    #              PRIVATE  FUNCTIONS              #
+    ################################################
+
+
+    def _clean_inactive_games(self, curr_func: str) -> None:
+        if len(self.set_games) >= self.config.get('MAX_SESSIONS', 10):
+            now = int(time.time())
+            inactive_games = [game_id for game_id, game in self.set_games.items() if (now - game['created']) >= self.config.get('SESSION_TTL_SECONDS', 1800)]
+
+            for game_id in inactive_games:
+                last_accessed = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(self.set_games[game_id]['last_accessed']))
+                self.logger.info("%s -- %s: %s -- last_accessed: %s", curr_func, self.ack['03'], game_id, last_accessed)
+                del self.set_games[game_id]
+
+
+    def _sanity_check(self, curr_func: str, params=None, ignore_empty: bool=False, ignore_missing: bool=False) -> dict[str, typing.Union[dict, str]]:
+        try:
+            data: dict = json.loads(params)
+        except json.decoder.JSONDecodeError:
+            self.logger.error("%s -- %s: %s", curr_func, self.errors['01'], params)
+            return { 'status': StatusFunction.ERROR.name, 'error': self.errors['01'] }
+
+        self.logger.info("%s -- %s: %s", curr_func, self.ack['01'], data)
+
+        if len(self.set_games) >= self.config.get('MAX_SESSIONS', 10):
+            return { 'status': StatusFunction.ERROR.name, 'error': self.errors['02'] }
+
+        game_id = data.get('gameID', '')[:self.config['SESSION_NAME_MAX_CHARS']]
+
+        if not ignore_empty and game_id == '':
+            return { 'status': StatusFunction.ERROR.name, 'error': self.errors['03'] }
+
+        if not ignore_missing and self.set_games.get(game_id, None) is None:
+            return { 'status': StatusFunction.ERROR.name, 'error': self.errors['05'] }
+
+        return { 'status': StatusFunction.SUCCESS.name,
+                 'game_id': game_id,
+                 'data': data,
+                 'error': '' }
+
+
+    def _update_game_ttl(self, curr_func: str, game_id: str) -> bool:
+        try:
+            self.set_games[game_id]['last_accessed'] = int(time.time())
+            return True
+        except Exception as err:
+            self.logger.error("%s -- %s: %s", curr_func, self.ack['01'], repr(err))
+            return False
 
 
     ################################################
@@ -56,7 +118,7 @@ class ViewModelApp():
 
     @export
     def get_version(self) -> dict:
-        return { 'version': self.config['version'] }
+        return { 'status': StatusFunction.SUCCESS.name, 'version': self.config['version'], 'error': '' }
 
 
     @export
@@ -69,6 +131,57 @@ class ViewModelApp():
         return { key.name: key.name for key in StatusFunction }
 
 
+    @export
+    def get_running_games(self) -> dict:
+        return { 'status': StatusFunction.SUCCESS.name, 'games': len(self.set_games), 'error': '' }
+
+
+    @export
+    def init_set_game(self, params=None) -> dict:
+        curr_func = inspect.currentframe().f_code.co_name
+
+        self._clean_inactive_games(curr_func)
+
+        sanity_check = self._sanity_check(curr_func, params, ignore_empty=False, ignore_missing=True)
+        if sanity_check['status'] == StatusFunction.ERROR.name:
+            return sanity_check
+
+        game_id = sanity_check['game_id']
+
+        if self.set_games.get(game_id, None) is None:
+            now = int(time.time())
+            self.set_games[game_id] = {'set_game': Game(Grid()), 'created': now, 'last_accessed': now, 'ttl': self.config.get('SESSION_TTL_SECONDS', 1800)}
+            self.set_games[game_id]['set_game'].set_penalty_time(self.config.get('PENALTY_TIMEOUT_SECONDS', 20))
+            self.set_games[game_id]['set_game'].set_max_player(self.config.get('MAX_PLAYERS', 4))
+
+        return { 'status': StatusFunction.SUCCESS.name, 'error': '' }
+
+
+    @export
+    def delete_running_games(self, params=None) -> dict:
+        curr_func = inspect.currentframe().f_code.co_name
+
+        self._clean_inactive_games(curr_func)
+
+        sanity_check = self._sanity_check(curr_func, params, ignore_empty=True, ignore_missing=True)
+        if sanity_check['status'] == StatusFunction.ERROR.name:
+            return sanity_check
+
+        data = sanity_check['data']
+        secret = data.get('secret', '')
+
+        if secret == '':
+            return { 'status': StatusFunction.ERROR.name, 'error': self.errors['01'] }
+
+        if secret != self.config.get('MASTER_KEY', ''):
+            return { 'status': StatusFunction.ERROR.name, 'error': self.errors['06'] }
+
+        self.set_games = {}
+        self.logger.info("%s -- %s: %s", curr_func, self.ack['04'], 'Lord Vader will be pleased')
+
+        return { 'status': StatusFunction.SUCCESS.name, 'error': '' }
+
+
     ################################################
     #                 PLAYER  API                  #
     ################################################
@@ -78,25 +191,24 @@ class ViewModelApp():
     def remove_player(self, params=None) -> dict:
         curr_func = inspect.currentframe().f_code.co_name
 
-        try:
-            data: dict = json.loads(params)
-        except json.decoder.JSONDecodeError:
-            self.logger.error("%s --%s: %s", curr_func, self.errors['01'], params)
-            return { 'status': StatusFunction.ERROR.name, 'players_stats': [], 'game_state': self.set_game.get_game_state(), 'error': self.errors['01'] }
+        sanity_check = self._sanity_check(curr_func, params)
+        if sanity_check['status'] == StatusFunction.ERROR.name:
+            return sanity_check
 
-        self.logger.info("%s -- %s: %s", curr_func, self.ack['01'], data)
+        game_id = sanity_check['game_id']
+        data = sanity_check['data']
 
-        if self.set_game.get_game_state() == GameState.RUNNING:
-            return { 'status': StatusFunction.ERROR.name, 'players_stats': [], 'game_state': self.set_game.get_game_state(), 'error': 'Not allowed: Game is running' }
+        if self.set_games[game_id]['set_game'].get_game_state() == GameState.RUNNING:
+            return { 'status': StatusFunction.ERROR.name, 'error': self.errors['06'] }
 
         player_name = data.get('name', '')
 
-        resp = self.set_game.remove_player(player_name=player_name)
+        resp = self.set_games[game_id]['set_game'].remove_player(player_name=player_name)
 
-        status = StatusFunction.SUCCESS.name if resp.get('status', False) else StatusFunction.ERROR.name
-        return { 'status': status,
-                 'players_stats': [ player.get_stats() for player in self.set_game.get_players() ],
-                 'game_state': self.set_game.get_game_state(),
+        self._update_game_ttl(curr_func, game_id)
+        return { 'status': StatusFunction.SUCCESS.name if resp.get('status', False) else StatusFunction.ERROR.name,
+                 'players_stats': [ player.get_stats() for player in self.set_games[game_id]['set_game'].get_players() ],
+                 'game_state': self.set_games[game_id]['set_game'].get_game_state(),
                  'error': resp.get('error', '') }
 
 
@@ -104,37 +216,45 @@ class ViewModelApp():
     def add_player(self, params=None) -> dict:
         curr_func = inspect.currentframe().f_code.co_name
 
-        try:
-            data: dict = json.loads(params)
-        except json.decoder.JSONDecodeError:
-            self.logger.error("%s --%s: %s", curr_func, self.errors['01'], params)
-            return { 'status': StatusFunction.ERROR.name, 'players_stats': [], 'game_state': self.set_game.get_game_state(), 'error': self.errors['01'] }
+        sanity_check = self._sanity_check(curr_func, params)
+        if sanity_check['status'] == StatusFunction.ERROR.name:
+            return sanity_check
 
-        self.logger.info("%s -- %s: %s", curr_func, self.ack['01'], data)
+        game_id = sanity_check['game_id']
+        data = sanity_check['data']
 
-        if self.set_game.get_game_state() == GameState.RUNNING:
-            return { 'status': StatusFunction.ERROR.name, 'players_stats': [], 'game_state': self.set_game.get_game_state(), 'error': 'Not allowed: Game is running' }
+        if self.set_games[game_id]['set_game'].get_game_state() == GameState.RUNNING:
+            return { 'status': StatusFunction.ERROR.name, 'error': self.errors['06'] }
 
         player_name = data.get('name', '')[:self.config['PLAYER_NAME_MAX_CHARS']]
         player_color = data.get('color', '#000000')
 
         if len(player_name) <= 2:
-            return { 'status': StatusFunction.ERROR.name, 'players_stats': [], 'game_state': self.set_game.get_game_state(), 'error': 'Invalid player name' }
+            return { 'status': StatusFunction.ERROR.name, 'error': self.errors['07'] }
 
-        resp = self.set_game.add_player(player_name=player_name, player_color=player_color)
+        resp = self.set_games[game_id]['set_game'].add_player(player_name=player_name, player_color=player_color)
 
-        status = StatusFunction.SUCCESS.name if resp.get('status', False) else StatusFunction.ERROR.name
-        return { 'status': status,
-                 'players_stats': [ player.get_stats() for player in self.set_game.get_players() ],
-                 'game_state': self.set_game.get_game_state(),
+        self._update_game_ttl(curr_func, game_id)
+        return { 'status': StatusFunction.SUCCESS.name if resp.get('status', False) else StatusFunction.ERROR.name,
+                 'players_stats': [ player.get_stats() for player in self.set_games[game_id]['set_game'].get_players() ],
+                 'game_state': self.set_games[game_id]['set_game'].get_game_state(),
                  'error': resp.get('error', '') }
 
 
     @export
-    def get_players_infos(self) -> dict:
+    def get_players_infos(self, params=None) -> dict:
+        curr_func = inspect.currentframe().f_code.co_name
+
+        sanity_check = self._sanity_check(curr_func, params)
+        if sanity_check['status'] == StatusFunction.ERROR.name:
+            return sanity_check
+
+        game_id = sanity_check['game_id']
+
+        self._update_game_ttl(curr_func, game_id)
         return { 'status': StatusFunction.SUCCESS.name,
-                 'players_stats': [ player.get_stats() for player in self.set_game.get_players() ],
-                 'game_state': self.set_game.get_game_state(),
+                 'players_stats': [ player.get_stats() for player in self.set_games[game_id]['set_game'].get_players() ],
+                 'game_state': self.set_games[game_id]['set_game'].get_game_state(),
                  'error': '' }
 
 
@@ -142,40 +262,47 @@ class ViewModelApp():
     def submit_set(self, params=None) -> dict:
         curr_func = inspect.currentframe().f_code.co_name
 
-        try:
-            data: dict = json.loads(params)
-        except json.decoder.JSONDecodeError:
-            self.logger.error("%s --%s: %s", curr_func, self.errors['01'], params)
-            return { 'status': StatusFunction.ERROR.name, 'is_valid': False, 'set': [], 'player_name': '', 'game_state': self.set_game.get_game_state(), 'error': self.errors['01'] }
+        sanity_check = self._sanity_check(curr_func, params)
+        if sanity_check['status'] == StatusFunction.ERROR.name:
+            return sanity_check
 
-        self.logger.info("%s -- %s: %s", curr_func, self.ack['01'], data)
+        game_id = sanity_check['game_id']
+        data = sanity_check['data']
 
         player_name = data.get('playerName', '')
         card_set = data.get('set', {})
 
-        resp = self.set_game.submit_set_from_player_name(player_name, card_set)
-        self.set_game.update_game(enable_pause=False)
+        resp = self.set_games[game_id]['set_game'].submit_set_from_player_name(player_name, card_set)
+        self.set_games[game_id]['set_game'].update_game(enable_pause=False)
 
-        return { 'status': StatusFunction.SUCCESS.name, 'is_valid': resp['status'], 'set': resp['set'], 'player_name': player_name, 'game_state': self.set_game.get_game_state(), 'error': resp['error'] }
+        self._update_game_ttl(curr_func, game_id)
+        return { 'status': StatusFunction.SUCCESS.name,
+                 'is_valid': resp['status'],
+                 'set': resp['set'],
+                 'player_name': player_name,
+                 'game_state': self.set_games[game_id]['set_game'].get_game_state(),
+                 'error': resp['error'] }
 
 
     @export
     def apply_penalty(self, params=None) -> dict:
         curr_func = inspect.currentframe().f_code.co_name
 
-        try:
-            data: dict = json.loads(params)
-        except json.decoder.JSONDecodeError:
-            self.logger.error("%s --%s: %s", curr_func, self.errors['01'], params)
-            return { 'status': StatusFunction.ERROR.name, 'game_state': self.set_game.get_game_state(), 'error': self.errors['01'] }
+        sanity_check = self._sanity_check(curr_func, params)
+        if sanity_check['status'] == StatusFunction.ERROR.name:
+            return sanity_check
 
-        self.logger.info("%s -- %s: %s", curr_func, self.ack['01'], data)
+        game_id = sanity_check['game_id']
+        data = sanity_check['data']
 
         player_name = data.get('playerName', '')
 
-        resp = self.set_game.apply_penalty_from_player_name(player_name)
+        resp = self.set_games[game_id]['set_game'].apply_penalty_from_player_name(player_name)
 
-        return { 'status': StatusFunction.SUCCESS.name if resp['status'] else StatusFunction.ERROR.name, 'game_state': self.set_game.get_game_state(), 'error': resp['error'] }
+        self._update_game_ttl(curr_func, game_id)
+        return { 'status': StatusFunction.SUCCESS.name if resp['status'] else StatusFunction.ERROR.name,
+                 'game_state': self.set_games[game_id]['set_game'].get_game_state(),
+                 'error': resp['error'] }
 
 
     ################################################
@@ -187,91 +314,106 @@ class ViewModelApp():
     def change_game_state(self, params=None) -> dict:
         curr_func = inspect.currentframe().f_code.co_name
 
-        try:
-            data: dict = json.loads(params)
-        except json.decoder.JSONDecodeError:
-            self.logger.error("%s --%s: %s", curr_func, self.errors['01'], params)
-            return { 'status': StatusFunction.ERROR.name, 'grid': [], 'draw_pile': -1, 'game_state': self.set_game.get_game_state(), 'error': self.errors['01'] }
+        sanity_check = self._sanity_check(curr_func, params)
+        if sanity_check['status'] == StatusFunction.ERROR.name:
+            return sanity_check
 
-        self.logger.info("%s -- %s: %s", curr_func, self.ack['01'], data)
+        game_id = sanity_check['game_id']
+        data = sanity_check['data']
 
-        if not self.set_game.get_players():
-            return { 'status': StatusFunction.ERROR.name, 'grid': [], 'draw_pile': -1, 'game_state': self.set_game.get_game_state(), 'error': 'No player found' }
+        if not self.set_games[game_id]['set_game'].get_players():
+            return { 'status': StatusFunction.ERROR.name, 'error': self.errors['08'] }
 
-        draw_pile = self.set_game.grid.get_number_cards_left_in_deck()
-        grid = [[]]
-
-        try:
-            grid = self.set_game.grid.grid_to_list()
-
-        except Exception as error:
-            self.logger.error("%s -- An error occured during the grid rendering: %s", curr_func, error)
-            return { 'status': StatusFunction.ERROR.name, 'grid': grid, 'draw_pile': draw_pile, 'game_state': self.set_game.get_game_state(), 'error': repr(error) }
-
-        if self.set_game.is_game_ended():
-            return { 'status': StatusFunction.ERROR.name, 'grid': grid, 'draw_pile': draw_pile, 'game_state': self.set_game.get_game_state(), 'error': 'Game ended, reset the game and start again' }
+        if self.set_games[game_id]['set_game'].is_game_ended():
+            return { 'status': StatusFunction.ERROR.name, 'error': self.errors['06'] }
 
         enable_pause = data.get('enablePause', False)
-        self.set_game.update_game(enable_pause)
-        self.logger.info("%s -- Game is now: %s", curr_func, self.set_game.get_game_state())
-        self.set_game.grid.pretty_print_grid()
+        self.set_games[game_id]['set_game'].update_game(enable_pause)
+        self.logger.info("%s -- Game is now: %s", curr_func, self.set_games[game_id]['set_game'].get_game_state())
+        self.set_games[game_id]['set_game'].grid.pretty_print_grid()
 
-        return { 'status': StatusFunction.SUCCESS.name, 'grid': grid, 'draw_pile': draw_pile, 'game_state': self.set_game.get_game_state(), 'error': '' }
+        self._update_game_ttl(curr_func, game_id)
+        return { 'status': StatusFunction.SUCCESS.name,
+                 'grid': self.set_games[game_id]['set_game'].grid.grid_to_list(),
+                 'draw_pile': self.set_games[game_id]['set_game'].grid.get_number_cards_left_in_deck(),
+                 'game_state': self.set_games[game_id]['set_game'].get_game_state(),
+                 'error': '' }
 
 
     @export
     def reset_game(self, params=None) -> dict:
         curr_func = inspect.currentframe().f_code.co_name
 
-        try:
-            data: dict = json.loads(params)
-        except json.decoder.JSONDecodeError:
-            self.logger.error("%s --%s: %s", curr_func, self.errors['01'], params)
-            return { 'status': StatusFunction.ERROR.name, 'game_state': self.set_game.get_game_state(), 'error': self.errors['01'] }
+        sanity_check = self._sanity_check(curr_func, params)
+        if sanity_check['status'] == StatusFunction.ERROR.name:
+            return sanity_check
 
-        self.logger.info("%s -- %s: %s", curr_func, self.ack['01'], data)
+        game_id = sanity_check['game_id']
+        data = sanity_check['data']
 
         hard_reset: bool = data.get('hard', True)
-        players_stats = [ player.get_stats() for player in self.set_game.get_players() ]
+        players_stats = [ player.get_stats() for player in self.set_games[game_id]['set_game'].get_players() ]
 
-        self.set_game = Game(Grid())
-        self.set_game.set_penalty_time(self.config.get('PENALTY_TIMEOUT_SECONDS', 20))
+        self.set_games[game_id]['set_game'] = Game(Grid())
 
         if not hard_reset and players_stats:
             for player in players_stats:
-                self.set_game.add_player(player_name=player.get('name', None))
+                self.set_games[game_id]['set_game'].add_player(player_name=player.get('name', None))
 
-        return { 'status': StatusFunction.SUCCESS.name, 'game_state': self.set_game.get_game_state(), 'error': '' }
+        self._update_game_ttl(curr_func, game_id)
+        return { 'status': StatusFunction.SUCCESS.name,
+                 'game_state': self.set_games[game_id]['set_game'].get_game_state(),
+                 'error': '' }
 
 
     @export
-    def get_game(self) -> dict:
+    def get_game(self, params=None) -> dict:
         curr_func = inspect.currentframe().f_code.co_name
 
-        self.set_game.grid.pretty_print_grid()
+        sanity_check = self._sanity_check(curr_func, params)
+        if sanity_check['status'] == StatusFunction.ERROR.name:
+            return sanity_check
 
-        draw_pile = self.set_game.grid.get_number_cards_left_in_deck()
-        grid = [[]]
+        game_id = sanity_check['game_id']
 
-        try:
-            grid = self.set_game.grid.grid_to_list()
+        self.set_games[game_id]['set_game'].grid.pretty_print_grid()
 
-        except Exception as error:
-            self.logger.error("%s -- An error occured during the grid rendering: %s", curr_func, error)
-            return { 'status': StatusFunction.ERROR.name, 'grid': grid, 'draw_pile': draw_pile, 'game_state': self.set_game.get_game_state(), 'error': repr(error) }
-
-        return { 'status': StatusFunction.SUCCESS.name, 'grid': grid, 'draw_pile': draw_pile, 'game_state': self.set_game.get_game_state(), 'error': '' }
-
-
-    @export
-    def get_game_state(self) -> dict:
-        return { 'status': StatusFunction.SUCCESS.name, 'game_state': self.set_game.get_game_state(), 'error': '' }
+        self._update_game_ttl(curr_func, game_id)
+        return { 'status': StatusFunction.SUCCESS.name,
+                 'grid': self.set_games[game_id]['set_game'].grid.grid_to_list(),
+                 'draw_pile': self.set_games[game_id]['set_game'].grid.get_number_cards_left_in_deck(),
+                 'game_state': self.set_games[game_id]['set_game'].get_game_state(),
+                 'error': '' }
 
 
     @export
-    def get_hints(self) -> dict:
-        unique_sets = self.set_game.grid.get_unique_sets_on_grid()
-        if not unique_sets:
-            return { 'status': StatusFunction.ERROR.name, 'sets': [], 'game_state': self.set_game.get_game_state(), 'error': 'No valid SET left' }
+    def get_game_state(self, params=None) -> dict:
+        curr_func = inspect.currentframe().f_code.co_name
 
-        return { 'status': StatusFunction.SUCCESS.name, 'sets': unique_sets, 'game_state': self.set_game.get_game_state(), 'error': '' }
+        sanity_check = self._sanity_check(curr_func, params)
+        if sanity_check['status'] == StatusFunction.ERROR.name:
+            return sanity_check
+
+        game_id = sanity_check['game_id']
+
+        self._update_game_ttl(curr_func, game_id)
+        return { 'status': StatusFunction.SUCCESS.name,
+                 'game_state': self.set_games[game_id]['set_game'].get_game_state(),
+                 'error': '' }
+
+
+    @export
+    def get_hints(self, params=None) -> dict:
+        curr_func = inspect.currentframe().f_code.co_name
+
+        sanity_check = self._sanity_check(curr_func, params)
+        if sanity_check['status'] == StatusFunction.ERROR.name:
+            return sanity_check
+
+        game_id = sanity_check['game_id']
+
+        self._update_game_ttl(curr_func, game_id)
+        return { 'status': StatusFunction.SUCCESS.name,
+                 'sets': self.set_games[game_id]['set_game'].grid.get_unique_sets_on_grid(),
+                 'game_state': self.set_games[game_id]['set_game'].get_game_state(),
+                 'error': '' }

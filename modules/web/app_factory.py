@@ -78,7 +78,11 @@ def export(func: typing.Callable[..., typing.Optional[typing.Any]]=None, req: st
             if request.args:
                 print(f"{request.endpoint} -- Reached with URL params {dict(request.args)} -- (Not supported)")
 
-            func_resp = request_strategy(func, req)
+            try:
+                func_resp = request_strategy(func, req)
+            except Exception as err:
+                print(f"{request.endpoint} -- ERROR -- {repr(err)}")
+                func_resp = { 'status': 'ERROR', 'error': repr(err) }
 
             if isinstance(func_resp, (str, Response)):
                 return func_resp

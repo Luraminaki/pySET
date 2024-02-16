@@ -1,8 +1,11 @@
 {
     "service_id": "pySET",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "app_version": "0.1.0",
     "logging_level": "INFO",
+    "MAX_SESSIONS": 5,
+    "SESSION_NAME_MAX_CHARS": 36,
+    "SESSION_TTL_SECONDS": 1800,
     "MAX_PLAYERS": 6,
     "PLAYER_NAME_MAX_CHARS": 12,
     "SUBMIT_TIMEOUT_SECONDS": 10,
@@ -11,5 +14,6 @@
         "easy": [10000, 15000],
         "normal": [7000, 10000],
         "hard": [3000, 5000]
-    }
+    },
+    "MASTER_KEY": ""
 }
