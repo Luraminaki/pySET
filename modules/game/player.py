@@ -9,7 +9,7 @@ Created on Wed Jan 25 11:17:51 2023
 
 #===================================================================================================
 import time
-from typing import List
+from typing import Union
 
 #pylint: disable=wrong-import-order, wrong-import-position
 
@@ -29,7 +29,7 @@ class Player():
         self._is_ai = is_ai
         self._difficulty = difficulty
 
-        self._found_sets: List[tuple] = [ ]
+        self._found_sets: list[tuple] = [ ]
         self._set_called = 0
         self._set_found_elapsed_time = [ ]
         self._last_penality = 0 # Timestamp
@@ -66,7 +66,7 @@ class Player():
         return self._last_penality
 
 
-    def get_stats(self) -> dict:
+    def get_stats(self) -> dict[str, Union[str, int, list[int]]]:
         average_answers_time = 0
 
         if self._set_found_elapsed_time:

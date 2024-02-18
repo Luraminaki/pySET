@@ -62,7 +62,7 @@ def most_frequent_flavor(flavors: list) -> int:
     """Returns the count of the stuff that appears the most in a given list.
 
     Args:
-        flavors (list): List of stuff.
+        flavors (list): list of stuff.
 
     Returns:
         int: Most frequent stuff count.

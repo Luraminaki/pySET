@@ -9,9 +9,9 @@ Created on Wed Jan 25 11:17:51 2023
 
 #===================================================================================================
 import time
-import typing
 import inspect
 import logging
+from typing import Union
 
 import json
 
@@ -43,7 +43,7 @@ class ViewModelApp():
 
         self.logger.info('%s version %s', self.__class__.__name__, __version__)
 
-        self.set_games: dict[str, dict[str, typing.Union[Game, int]]] = {}
+        self.set_games: dict[str, dict[str, Union[Game, int]]] = {}
 
         self.ack = {"01": "DATA_RECIEVED",
                     "02": "DELETING_GAME",
@@ -57,7 +57,8 @@ class ViewModelApp():
                        "06": "NOT_ALLOWED",
                        "07": "INVALID_PLAYER_NAME",
                        "08": "PLAYER_NOT_FOUND",
-                       "09": "SET_NOT_FOUND"}
+                       "09": "SET_NOT_FOUND",
+                       "10": "CARDS_NOT_FOUND"}
 
 
     ################################################
@@ -76,7 +77,7 @@ class ViewModelApp():
                 del self.set_games[game_id]
 
 
-    def _sanity_check(self, curr_func: str, params=None, ignore_empty: bool=False, ignore_missing: bool=False) -> dict[str, typing.Union[dict, str]]:
+    def _sanity_check(self, curr_func: str, params=None, ignore_empty: bool=False, ignore_missing: bool=False) -> dict[str, Union[dict, str]]:
         try:
             data: dict = json.loads(params)
         except json.decoder.JSONDecodeError:
@@ -270,9 +271,13 @@ class ViewModelApp():
         data = sanity_check['data']
 
         player_name = data.get('playerName', '')
-        card_set = data.get('set', {})
+        cards_set = data.get('set', {})
 
-        resp = self.set_games[game_id]['set_game'].submit_set_from_player_name(player_name, card_set)
+        cards_displayed = self.set_games[game_id]['set_game'].grid.get_displayed_cards()
+        if not all(card in cards_displayed for card in cards_set):
+            return { 'status': StatusFunction.ERROR.name, 'error': self.errors['10'] }
+
+        resp = self.set_games[game_id]['set_game'].submit_set_from_player_name(player_name, cards_set)
         self.set_games[game_id]['set_game'].update_game(enable_pause=False)
 
         self._update_game_ttl(curr_func, game_id)
@@ -334,7 +339,7 @@ class ViewModelApp():
 
         self._update_game_ttl(curr_func, game_id)
         return { 'status': StatusFunction.SUCCESS.name,
-                 'grid': self.set_games[game_id]['set_game'].grid.grid_to_list(),
+                 'grid': self.set_games[game_id]['set_game'].grid.arrange_cards_to_grid(),
                  'draw_pile': self.set_games[game_id]['set_game'].grid.get_number_cards_left_in_deck(),
                  'game_state': self.set_games[game_id]['set_game'].get_game_state(),
                  'error': '' }
@@ -380,7 +385,7 @@ class ViewModelApp():
 
         self._update_game_ttl(curr_func, game_id)
         return { 'status': StatusFunction.SUCCESS.name,
-                 'grid': self.set_games[game_id]['set_game'].grid.grid_to_list(),
+                 'grid': self.set_games[game_id]['set_game'].grid.arrange_cards_to_grid(),
                  'draw_pile': self.set_games[game_id]['set_game'].grid.get_number_cards_left_in_deck(),
                  'game_state': self.set_games[game_id]['set_game'].get_game_state(),
                  'error': '' }

@@ -14,7 +14,7 @@
            @cancel="modalPlayerUpdate.do = false; playerName = ''; playerColor = '#000000'"
            @close="modalPlayerUpdate.do = false">
     <div class="is-flex">
-      <BFormInput v-model="playerName" :state="validPlayerName && uniquePlayerName" type="text" placeholder="Player name"/>
+      <BFormInput v-model="playerName" :state="validPlayerName && uniquePlayerName" type="text" placeholder="Player name" id="inputPlayerName"/>
       <BFormInput v-model="playerColor" :state="validPlayerColor && uniquePlayerColor" type="color"/>
     </div>
   </b-modal>
@@ -26,7 +26,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onBeforeMount, onMounted } from "vue";
+import { ref, computed, onBeforeMount, onMounted, watch } from "vue";
+import { sleep } from "~/assets/helpers.js";
 import { addPlayer } from "~/assets/webAppAPI.js";
 import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
 
@@ -83,6 +84,20 @@ onBeforeMount(() => { });
 onMounted(async () => {
   componentName.value = getCurrentInstance().type.__name;
 });
+
+// https://stackoverflow.com/questions/59125857/how-to-watch-props-change-with-vue-composition-api-vue-3
+watch(
+  () => modalPlayerUpdate.value.do, async (newValue, oldValue) => {
+    if (newValue) {
+      await sleep(300); // Not optimal, but to reliably autofocus the input form, you have to wait for it...
+
+      const element = document.getElementById('inputPlayerName');
+      if (element) {
+        element.focus();
+      }
+    }
+  }
+);
 
 // ###################
 // #####   GUI   #####

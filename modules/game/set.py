@@ -10,7 +10,6 @@ Created on Wed Jan 25 11:17:51 2023
 #===================================================================================================
 import time
 from itertools import combinations
-from typing import List
 
 import copy
 
@@ -39,13 +38,13 @@ class Grid():
         self._rows = len(self._features[0]) # 3
         self._cols = len(self._features) # 4
         self._standard_nb_cards_on_grid = self._rows * self._cols # 12
-        self._cards_on_grid: List[int] = [ None ] * self._standard_nb_cards_on_grid # Default Game is played on a 4 x 3 grid
+        self._cards_on_grid: list[int] = [ None ] * self._standard_nb_cards_on_grid # Default Game is played on a 4 x 3 grid
 
-        self._shuffled_cards_id_in_deck: List[int] = [ ] # Deck filled with random integers (default range between 0 and 80 => 81 unique values)
-        self._full_deck: List[int] = [ None ] * self._rows ** self._cols # Default deck has a total of 81 cards
+        self._shuffled_cards_id_in_deck: list[int] = [ ] # Deck filled with random integers (default range between 0 and 80 => 81 unique values)
+        self._full_deck: list[int] = [ None ] * self._rows ** self._cols # Default deck has a total of 81 cards
 
-        self._unique_sets: List[list] = [ ] # Default game has a total of 1080 unique sets
-        self._unique_sets_on_grid: List[list] = [ ]
+        self._unique_sets: list[list] = [ ] # Default game has a total of 1080 unique sets
+        self._unique_sets_on_grid: list[list] = [ ]
 
         self._init_all_cards()
         self.init_grid(find_all_unique_sets)
@@ -125,7 +124,7 @@ class Grid():
         """Sanity check for a set that abides with the following rule: If you can sort a group of X cards into "X - 1 of ____ and 1 of ____", then it is not a set.
 
         Args:
-            card_set (list): List of integers which represents a card's flavor.
+            card_set (list): list of integers which represents a card's flavor.
 
         Returns:
             bool: True if valid, False if not.
@@ -143,14 +142,14 @@ class Grid():
         return not any_sub_valid
 
 
-    def _find_all_valid_set_from(self, card_list: list) -> list:
+    def _find_all_valid_set_from(self, card_list: list) -> list[list[int]] | list:
         """Returns a list of all the valid set from a list of cards.
 
         Args:
-            card_list (list): List of cards (possibly a playground).
+            card_list (list): list of cards (possibly a playground).
 
         Returns:
-            list: Either an empty list of a list of all the valid set found.
+            list[list[int]] | list: Either an empty list of a list of all the valid set found.
         """
         all_valid_sets = [ ]
         card_sets = list(combinations(card_list, self._rows))
@@ -164,7 +163,7 @@ class Grid():
         return all_valid_sets
 
 
-    def _split_list(self, list_to_split: list[int], chunk_size: int) -> list[list[int]]:
+    def _split_list(self, list_to_split: list[int], chunk_size: int) -> list[list[int]] | list:
         """Returns a list of list of a desired lenght
 
         Args:
@@ -172,7 +171,7 @@ class Grid():
             chunk_size (int): lenght of the sublist
 
         Returns:
-            list[list[int]]: list of sublist
+            list[list[int]] | list: list of sublist
         """
         return [list_to_split[i:i + chunk_size] for i in range(0, len(list_to_split), chunk_size)]
 
@@ -182,13 +181,22 @@ class Grid():
     #
 
 
-    def grid_to_list(self) -> list[list[int]]:
+    def arrange_cards_to_grid(self) -> list[list[int]] | list:
         """Returns the current state of the grid, but as a list of list.
 
         Returns:
             list: list of list of 3 cards (or an empty list).
         """
-        return self._split_list(self._cards_on_grid, self._rows)
+        return self._split_list(self.get_displayed_cards(), self._rows)
+
+
+    def get_displayed_cards(self) -> list[int] | list:
+        """Returns the list of cards currently on display
+
+        Returns:
+            list[int]: list of cards
+        """
+        return copy.deepcopy(self._cards_on_grid)
 
 
     def get_size_all_time_unique_sets(self) -> int:
@@ -212,7 +220,7 @@ class Grid():
         """Returns all the unique set(s) that can be made from the whole deck.
 
         Returns:
-            list: List of all the unique set(s) that can be made from the whole deck.
+            list: list of all the unique set(s) that can be made from the whole deck.
         """
         return copy.deepcopy(self._unique_sets)
 
@@ -221,7 +229,7 @@ class Grid():
         """Returns the unique set(s) found from the playground.
 
         Returns:
-            list: List of the unique set(s) found from the playground.
+            list: list of the unique set(s) found from the playground.
         """
         return copy.deepcopy(self._unique_sets_on_grid)
 
@@ -288,7 +296,7 @@ class Grid():
         game = ""
 
         try:
-            pp_grid = self.grid_to_list()
+            pp_grid = self.arrange_cards_to_grid()
 
         except Exception:
             print("Unexpected error occured while trying to pretty print the grid in the console...")

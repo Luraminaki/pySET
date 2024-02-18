@@ -11,7 +11,7 @@ Created on Wed Jan 25 11:17:51 2023
 import time
 import enum
 from uuid import uuid4
-from typing import List, Tuple
+from typing import Union
 
 import copy
 import random
@@ -45,15 +45,15 @@ class Game():
 
         self._max_players = 4
         self._penalty_time = 20
-        self._players: List[Player] = [ ]
+        self._players: list[Player] = [ ]
 
         self._game_state = GameState.NEW
 
         self.grid = grid
 
 
-    def _select_player_from_name(self, player_name: str) -> Tuple[Player | None, int]:
-        for player_id, player in enumerate(self._players):
+    def _select_player_from_name(self, player_name: str) -> tuple[Player | None, int]:
+        for player_id, player in enumerate(copy.deepcopy(self._players)):
             if player.get_stats().get('name', '') == player_name:
                 return player, player_id
         return None, -1
@@ -69,11 +69,11 @@ class Game():
         return self._max_players
 
 
-    def get_players(self) -> List[Player] | list:
+    def get_players(self) -> list[Player] | list:
         return copy.deepcopy(self._players)
 
 
-    def add_player(self, player_name: str, player_color: str='#000000', is_ai: bool=False, difficulty: dict=None) -> dict:
+    def add_player(self, player_name: str, player_color: str='#000000', is_ai: bool=False, difficulty: dict=None) -> dict[str, Union[bool, list[Player] | list, str]]:
         if player_name is None:
             return { 'status': False, 'players': self.get_players(), 'error': 'PLAYER_NAME_IS_NONE' }
 
@@ -93,7 +93,7 @@ class Game():
         return { 'status': True, 'players': self.get_players(), 'error': '' }
 
 
-    def remove_player(self, player_name: str) -> dict:
+    def remove_player(self, player_name: str) -> dict[str, Union[bool, list[Player] | list, str]]:
         if not self.get_players():
             return { 'status': False, 'players': self.get_players(), 'error': 'NO_PLAYER' }
 
@@ -106,14 +106,14 @@ class Game():
         return { 'status': True, 'players': self.get_players(), 'error': '' }
 
 
-    def submit_set_from_player_name(self, player_name: str, card_set: list=None) -> dict:
+    def submit_set_from_player_name(self, player_name: str, card_set: list=None) -> dict[str, Union[bool, list[int] | list, str]]:
         status = False
         card_set = [ ] if card_set is None else card_set
 
         if self._game_state.name == GameState.ENDED.name:
             return { 'status': status, 'set': card_set, 'error': 'GAME_ENDED' }
 
-        player, _ = self._select_player_from_name(player_name=player_name)
+        player, player_id = self._select_player_from_name(player_name=player_name)
         if player is None:
             return { 'status': status, 'set': card_set, 'error': 'PLAYER_IS_NONE' }
 
@@ -124,20 +124,20 @@ class Game():
         if int(time.time() - player.get_last_penalty()) <= self._penalty_time:
             return { 'status': status, 'set': card_set, 'error': 'PLAYER_{}_STILL_UNDER_PENALITY'.format(player.get_stats().get('name', '').upper()) }
 
-        status = player.submit_set(card_set, self._timer - self._elapsed_time_before_pause)
+        status = self._players[player_id].submit_set(card_set, self._timer - self._elapsed_time_before_pause)
 
         if status:
             self.reset_timer()
 
-        return { 'status': status, 'set': card_set, 'error': '' if status else 'INVALID_SET + PENALITY_APPLIED_TO_{}'.format(player.get_stats().get('name', '').upper()) }
+        return { 'status': status, 'set': card_set, 'error': '' if status else 'INVALID_SET + PENALITY_APPLIED_TO_{}'.format(self._players[player_id].get_stats().get('name', '').upper()) }
 
 
-    def apply_penalty_from_player_name(self, player_name: str) -> dict:
-        player, _ = self._select_player_from_name(player_name=player_name)
+    def apply_penalty_from_player_name(self, player_name: str) -> dict[str, Union[bool, str]]:
+        player, player_id = self._select_player_from_name(player_name=player_name)
         if player is None:
             return { 'status': False, 'error': 'PLAYER_IS_NONE' }
 
-        return { 'status': player.apply_penalty(), 'error': '' }
+        return { 'status': self._players[player_id].apply_penalty(), 'error': '' }
 
 
     def update_game(self, enable_pause: bool=False) -> None:
@@ -206,7 +206,7 @@ def main() -> None:
     ia_player: Player = None
 
     set_game = Game(Grid())
-    players: List[Player] = set_game.add_player('', is_ai=True).get('players', [ ])
+    players: list[Player] = set_game.add_player('', is_ai=True).get('players', [ ])
 
     ia_player_name = ''
 

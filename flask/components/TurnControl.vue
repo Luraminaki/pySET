@@ -222,6 +222,20 @@ const sendSelection = async (playerName) => {
   selectedPlayer.value = '';
 
   if (!respSubmit.status){
+    if (respSubmit.content.error == 'CARDS_NOT_FOUND') {
+      emit('update-game-state', { status: true,
+                                  typeState: TypeStates.GAME.name,
+                                  gameState: GameStates.UPDATE.name,
+                                  data: {action: ''},
+                                  from: [componentName.value] });
+    }
+
+    emit('update-player-state', { status: true,
+                                  typeState: TypeStates.PLAYER.name,
+                                  playerState: PlayerStates.UPDATE.name,
+                                  data: {action: ''},
+                                  from: [componentName.value] });
+
     return { status: respSubmit.status };
   }
 
