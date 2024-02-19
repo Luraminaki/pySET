@@ -27,7 +27,7 @@
   <div class="mt-2 is-center">
 
     <b-modal v-model="firstLaunch" title="Create / Join" @hide.prevent hide-footer>
-      <BFormInput v-model="gameID" :state="validGameID" type="text" placeholder="Game ID"/>
+      <BFormInput v-model="gameID" :state="validGameID" type="text" placeholder="Game ID (3 characters minimum)"/>
       <BButton class="mt-2" pill :disabled="!validGameID" @click="gameCreateJoin()">
         CREATE / JOIN
       </BButton>

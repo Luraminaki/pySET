@@ -10,6 +10,8 @@
              :disabled="disableHint">HINT</BButton>
   </div>
 
+  <p v-if="props.playersStats.length == 0" style="color: red; font-size: 0.63rem; margin-bottom: 0px; margin-top: 0px">Add at least one player to start</p>
+
   <b-modal v-model="modalSelectPlayer.do" :title="modalSelectPlayer.modalTitle" @hide.prevent hide-footer>
     <div class="is-flex">
       <BButton pill v-for="player in humanPlayers" :key="player.name" @click="proceedWithSelectedPlayer(player.name)">

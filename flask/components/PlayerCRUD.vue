@@ -14,7 +14,7 @@
            @cancel="modalPlayerUpdate.do = false; playerName = ''; playerColor = '#000000'"
            @close="modalPlayerUpdate.do = false">
     <div class="is-flex">
-      <BFormInput v-model="playerName" :state="validPlayerName && uniquePlayerName" type="text" placeholder="Player name" id="inputPlayerName"/>
+      <BFormInput v-model="playerName" :state="validPlayerName && uniquePlayerName" type="text" placeholder="Player name (3 characters minimum)" id="inputPlayerName"/>
       <BFormInput v-model="playerColor" :state="validPlayerColor && uniquePlayerColor" type="color"/>
     </div>
   </b-modal>

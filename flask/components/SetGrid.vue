@@ -17,6 +17,7 @@
   <!-- GRID -->
   <BOverlay class="mt-3"
             :show="showGrid"
+            no-spinner
             variant="secondary" opacity="1" blur="5px">
     <BOverlay :show="!allowPlayerGridClick"
               no-spinner
