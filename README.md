@@ -87,8 +87,8 @@ I wrote a `Dockerfile` as a training exercise and for those that want something 
 
 ```sh
 cd pySET
-docker build -t pyset:0.1 .
-docker run -d -p 5000:5000 pyset:0.1
+docker build -t pyset:0.2 .
+docker run -d -p 5000:5000 pyset:0.2
 ```
 
 ## POSSIBLE FUTURE UPDATES

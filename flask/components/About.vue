@@ -49,7 +49,8 @@
 
       <h2>MORE?</h2>
       <ul>
-        <p>If you are curious, you can find more about <b>SET!</b> <a href="https://en.wikipedia.org/wiki/Set_(card_game)">here</a>.</p>
+        <p>If you are curious about the game, you can find more about <b>SET!</b> <a href="https://en.wikipedia.org/wiki/Set_(card_game)">here</a>.</p>
+        <p>If you want to have a look at the source code, want to help or report a bug, you can do it <a href="https://github.com/Luraminaki/pySET">here</a>.</p>
       </ul>
 
     </BCardText>
