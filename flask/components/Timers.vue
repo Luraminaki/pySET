@@ -2,14 +2,14 @@
 
   <div class="is-flex">
     <div>
-      <p>Penalty time</p>
+      <div :title="`A player penalty lasts for ${config.PENALTY_TIMEOUT_SECONDS} seconds`">Penalty time</div>
       <BProgress>
         <BProgressBar v-for="(_, index) in props.playersStats" :value="playersBarPenaltyProgress[index]" :style="`background-color:${variantsPenaltyProgress[index]}`" />
       </BProgress>
     </div>
 
     <div>
-      <p>Submit time</p>
+      <div :title="`Submitting duration is ${config.SUBMIT_TIMEOUT_SECONDS} seconds`">Submit time</div>
       <BProgress :value="submitTimeoutProgressRatio" :variant="submitTimeoutVariant" :animated="true" striped/>
     </div>
   </div>
