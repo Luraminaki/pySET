@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # https://github.com/benoitc/gunicorn/blob/master/examples/example_config.py
 
-loglevel = "debug"
+loglevel = "info"
 accesslog = errorlog = "-"
 capture_output = False
 
@@ -13,12 +13,5 @@ chdir = "./flask/"
 
 workers = 1
 threads = 1
-
-# TLS configuration
-# certfile = './gunicorn/cert.pem'
-# keyfile = './gunicorn/key.pem'
-
-# Restart workers when code changes (development only!)
-reload = True
 
 daemon = False

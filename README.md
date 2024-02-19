@@ -14,12 +14,17 @@ Fun project where I could cram in some of the knowledge I gained from coding in 
 - [SET](#set)
   - [VERSIONS](#versions)
   - [TABLE OF CONTENT](#table-of-content)
+  - [TL;DR](#tldr)
   - [INSTALL AND BUILD GUIDE (WebUI - Front)](#install-and-build-guide-webui---front)
   - [INSTALL AND START GUIDE (Server - Back)](#install-and-start-guide-server---back)
   - [DOCKER](#docker)
   - [POSSIBLE FUTURE UPDATES](#possible-future-updates)
 
 <!-- /TOC -->
+
+## TL;DR
+
+"I don't want to install anything or read anything, just make it quick and easy please." I hear you say? Sure, just click [here](https://pyset.onrender.com/) and have fun. 
 
 ## INSTALL AND BUILD GUIDE (WebUI - Front)
 
@@ -79,7 +84,7 @@ or
 gunicorn -c gunicorn/dev_app.py
 ```
 
-You can now open your favorite web browser and [start-the-game](http://localhost:5000/)
+You can now open your favorite web browser and [start-the-game](http://localhost/)
 
 ## DOCKER
 
@@ -88,7 +93,7 @@ I wrote a `Dockerfile` as a training exercise and for those that want something 
 ```sh
 cd pySET
 docker build -t pyset:0.2 .
-docker run -d -p 5000:5000 pyset:0.2
+docker run -d -p 10000:10000 pyset:0.2
 ```
 
 ## POSSIBLE FUTURE UPDATES

@@ -65,5 +65,5 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--configuration', help='Configuration file location', required=True)
     args = parser.parse_args()
 
-    APP = create_app(args.configuration, scheme='http://', subdomain='localhost')
-    APP.run(host='localhost', port=5000, threaded=True)
+    APP = create_app(args.configuration, scheme='http://', subdomain='0.0.0.0')
+    APP.run(host='0.0.0.0', port=10000, threaded=True)

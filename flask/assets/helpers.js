@@ -1,21 +1,39 @@
 export async function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms))
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 // ####################
 // ### EASY ROUTING ###
 // ####################
 
-const currApiHost = window.location.hostname
-const errorUrl = window.location.protocol + `//${currApiHost}:5000/404`
-const appApiUrl = window.location.protocol + `//${currApiHost}:5000/api`
+let port = ':10000';
+const localhost = ['0.0.0.0', 'localhost', '127.0.0.1'];
+
+const currApiHost = window.location.hostname;
+
+const errorUrlLocal = window.location.protocol + `//${currApiHost}${port}/404`;
+const appApiUrlLocal = window.location.protocol + `//${currApiHost}${port}/api`;
+
+const errorUrlHosted = window.location.protocol + `//${currApiHost}/404`;
+const appApiUrlHosted = window.location.protocol + `//${currApiHost}/api`;
 
 export function route(r) {
-  if (r.indexOf('app/')==0) {
-    return `${appApiUrl}/${r}/`
+  let appApiUrl = appApiUrlHosted;
+  let errorUrl= errorUrlHosted;
+
+  for (let host of localhost) {
+    if (currApiHost.indexOf(host) == 0) {
+      appApiUrl = appApiUrlLocal;
+      errorUrl= errorUrlLocal;
+      break;
+    }
+  }
+
+  if (r.indexOf('app/') == 0) {
+    return `${appApiUrl}/${r}/`;
   }
   else {
-    return `${errorUrl}/${r}/`
+    return `${errorUrl}/${r}/`;
   }
 }
 
@@ -40,7 +58,7 @@ export async function attempt(apiRoute, data={}, CRUD='GET') {
 
     else {
       console.log(`Unkown ${CRUD} request`);
-      return { status: false, content: { status: 'CRUD_ERROR', error: `CRUD ${CRUD} inconnue`} }
+      return { status: false, content: { status: 'CRUD_ERROR', error: `CRUD ${CRUD} inconnue`} };
     }
 
     if (!(['SUCCESS', 'DONE', 'ONGOING'].includes(resp.status))) {
@@ -48,7 +66,7 @@ export async function attempt(apiRoute, data={}, CRUD='GET') {
       return { status: false, content: resp };
     }
 
-    return { status: true, content: resp }
+    return { status: true, content: resp };
 
   } catch (error) {
     console.log(`Error ${apiRoute} : ${error}`);
@@ -63,12 +81,12 @@ export async function attempt(apiRoute, data={}, CRUD='GET') {
 // https://stackoverflow.com/questions/66190949/how-can-a-buefy-toast-be-made-available-to-all-components-in-a-vue-app
 export async function initConfig() {
   try {
-    const res_config = await fetch(route('app/get_config')).then(r => r.json())
-    const config = res_config
-    return config
+    const res_config = await fetch(route('app/get_config')).then(r => r.json());
+    const config = res_config;
+    return config;
   }
   catch (error) {
-    console.log(`Error initConfig : ${error}`)
-    return {}
+    console.log(`Error initConfig : ${error}`);
+    return { };
   }
 }

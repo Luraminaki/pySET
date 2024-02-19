@@ -86,9 +86,6 @@ class ViewModelApp():
 
         self.logger.info("%s -- %s: %s", curr_func, self.ack['01'], data)
 
-        if len(self.set_games) >= self.config.get('MAX_SESSIONS', 10):
-            return { 'status': StatusFunction.ERROR.name, 'error': self.errors['02'] }
-
         game_id = data.get('gameID', '')[:self.config['SESSION_NAME_MAX_CHARS']]
 
         if not ignore_empty and game_id == '':
@@ -96,6 +93,9 @@ class ViewModelApp():
 
         if not ignore_missing and self.set_games.get(game_id, None) is None:
             return { 'status': StatusFunction.ERROR.name, 'error': self.errors['05'] }
+
+        if len(self.set_games) >= self.config.get('MAX_SESSIONS', 10) and self.set_games.get(game_id, None) is None:
+            return { 'status': StatusFunction.ERROR.name, 'error': self.errors['02'] }
 
         return { 'status': StatusFunction.SUCCESS.name,
                  'game_id': game_id,
@@ -134,14 +134,16 @@ class ViewModelApp():
 
     @export
     def get_running_games(self) -> dict:
+        curr_func = inspect.currentframe().f_code.co_name
+
+        self._clean_inactive_games(curr_func)
+
         return { 'status': StatusFunction.SUCCESS.name, 'games': len(self.set_games), 'error': '' }
 
 
     @export
     def init_set_game(self, params=None) -> dict:
         curr_func = inspect.currentframe().f_code.co_name
-
-        self._clean_inactive_games(curr_func)
 
         sanity_check = self._sanity_check(curr_func, params, ignore_empty=False, ignore_missing=True)
         if sanity_check['status'] == StatusFunction.ERROR.name:

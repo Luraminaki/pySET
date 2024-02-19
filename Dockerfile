@@ -26,4 +26,4 @@ RUN .venv/bin/pip install -U -r requirements.txt
 
 CMD [ ".venv/bin/python3", "server_app.py", "-c", "config.json" ]
 
-EXPOSE 5000
+EXPOSE 10000
