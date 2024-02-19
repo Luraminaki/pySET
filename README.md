@@ -30,7 +30,7 @@ Fun project where I could cram in some of the knowledge I gained from coding in 
 
 If you have [Docker](https://www.docker.com/) or [Rancher](https://www.rancher.com/) installed, you can skip directly to [this section](#docker).
 If you only want to run the project, you will only need `Python 3` (≥ v3.10), and you can skip directly to [this section](#install-and-start-guide-server---back).
-If you plan to build and run the project from scratch, you will need `NodJS` (≥ v21.6), `Yarn` (≥ v1.22), `Python 3` (≥ v3.10).
+If you plan to build and run the project from scratch, you will need `NodeJS` (≥ v21.6), `Yarn` (≥ v1.22), `Python 3` (≥ v3.10).
 
 - Clone, or download + extract [this project](https://github.com/Luraminaki/pySET/archive/refs/heads/main.zip)
 - For `NodeJS` installation, consult the following [link](https://nodejs.org/en/download)
