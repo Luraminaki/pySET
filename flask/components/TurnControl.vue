@@ -41,6 +41,7 @@ const props = defineProps({
   playerState: { type: String, required: true },
   playersStats: { type: Array, required: false, default() { return [] } },
   selectedCards: { type: Array, required: false, default() { return [] } },
+  validAmountSelectedCards: { type: Number, required: false, default() { return 3 } },
 });
 
 const componentName = ref('');
@@ -65,7 +66,7 @@ const canCallSet = computed(() => (props.playerState == PlayerStates.IDLE.name &
 const canSendSet = computed(() => (props.playerState == PlayerStates.SUBMITTING.name &&
                                    props.gameState == GameStates.RUNNING.name &&
                                    props.playersStats.length != 0 &&
-                                   props.selectedCards.length == 3));
+                                   props.selectedCards.length == props.validAmountSelectedCards));
 
 const setCalled = ref(false);
 

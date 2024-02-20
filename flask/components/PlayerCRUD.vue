@@ -14,7 +14,7 @@
            @cancel="modalPlayerUpdate.do = false; playerName = ''; playerColor = '#000000'"
            @close="modalPlayerUpdate.do = false">
     <div class="is-flex">
-      <BFormInput v-model="playerName" :state="validPlayerName && uniquePlayerName" type="text" placeholder="Player name (3 characters minimum)" id="inputPlayerName"/>
+      <BFormInput v-model="playerName" :state="validPlayerName && uniquePlayerName" type="text" :placeholder="`Player name (${minNameLength} characters minimum)`" id="inputPlayerName"/>
       <BFormInput v-model="playerColor" :state="validPlayerColor && uniquePlayerColor" type="color"/>
     </div>
   </b-modal>
@@ -60,9 +60,10 @@ const playerColor = ref('#000000');
 const uniquePlayerColor = computed(() => (props.playersStats.filter(findPlayerByColor).length == 0));
 const validPlayerColor = computed(() => (playerColor.value != ''));
 
+const minNameLength = ref(3);
 const playerName = ref('');
 const uniquePlayerName = computed(() => (props.playersStats.filter(findPlayerByName).length == 0));
-const validPlayerName = computed(() => (playerName.value.length > 2 && playerName.value.length <= config.value.PLAYER_NAME_MAX_CHARS));
+const validPlayerName = computed(() => (playerName.value.length >= minNameLength.value && playerName.value.length <= config.value.PLAYER_NAME_MAX_CHARS));
 
 const validPlayer = computed(() => (validPlayerName.value && uniquePlayerName.value &&
                                     validPlayerColor.value && uniquePlayerColor.value))

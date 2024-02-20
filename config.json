@@ -9,11 +9,11 @@
     "MAX_PLAYERS": 6,
     "PLAYER_NAME_MAX_CHARS": 12,
     "SUBMIT_TIMEOUT_SECONDS": 10,
-    "PENALTY_TIMEOUT_SECONDS": 20,
+    "PENALTY_TIMEOUT_SECONDS": 10,
     "ai": {
         "easy": [10000, 15000],
         "normal": [7000, 10000],
         "hard": [3000, 5000]
     },
-    "MASTER_KEY": "Ph'nglui mglw'nafh Cthulhu R'lyeh wgah'nagl fhtagn"
+    "secret": "Ph'nglui mglw'nafh Cthulhu R'lyeh wgah'nagl fhtagn"
 }

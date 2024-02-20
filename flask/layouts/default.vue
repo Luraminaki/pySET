@@ -27,7 +27,7 @@
   <div class="mt-2 is-center">
 
     <b-modal v-model="firstLaunch" title="Create / Join" @hide.prevent hide-footer>
-      <BFormInput v-model="gameID" :state="validGameID" type="text" placeholder="Game ID (3 characters minimum)"/>
+      <BFormInput v-model="gameID" :state="validGameID" type="text" :placeholder="`Game ID (${minIDLength} characters minimum)`"/>
       <BButton class="mt-2" pill :disabled="!validGameID" @click="gameCreateJoin()">
         CREATE / JOIN
       </BButton>
@@ -80,8 +80,9 @@ const modalGenericMessage = ref({triggerModal: false, modalTitle: '', modalMessa
 const games = ref("?");
 const maxGames = ref(10);
 
+const minIDLength = ref(3)
 const gameID = ref('');
-const validGameID = computed(() => (gameID.value.length > 2 && gameID.value.length <= 36));
+const validGameID = computed(() => (gameID.value.length >= minIDLength.value && gameID.value.length <= 36));
 const firstLaunch = ref(true);
 
 const gameState = ref(GameStates.NEW.name);

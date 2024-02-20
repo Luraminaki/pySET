@@ -176,7 +176,7 @@ class ViewModelApp():
         if secret == '':
             return { 'status': StatusFunction.ERROR.name, 'error': self.errors['01'] }
 
-        if secret != self.config.get('MASTER_KEY', ''):
+        if secret != self.config.get('secret', ''):
             return { 'status': StatusFunction.ERROR.name, 'error': self.errors['06'] }
 
         self.set_games = {}

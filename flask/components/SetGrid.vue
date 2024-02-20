@@ -41,6 +41,7 @@
 
                :playersStats="props.playersStats"
                :selectedCards="selectedCards"
+               :validAmountSelectedCards= "validAmountSelectedCards"
 
                @update-player-state="updatePlayerStateHandler($event)"
                @update-game-state="updateGameStateHandler($event)"/>
@@ -88,12 +89,13 @@ const cardsEvent = ref({ cards: [], event: '' });
 const resetToggleCounter = ref(0);
 
 // Game and Player variables
-const penalisedPlayer = ref('');
-const selectedCards = ref([]);
-
 const grid = ref([[]]);
 const drawPile = ref(0);
 const hintsRequested = ref(0);
+
+const penalisedPlayer = ref('');
+const selectedCards = ref([]);
+const validAmountSelectedCards = computed(() => (grid.value[0].length));
 
 // ##################
 // #####  NUXT  #####
