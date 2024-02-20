@@ -28,7 +28,6 @@ Fun project where I could cram in some of the knowledge I gained from coding in 
 
 ## INSTALL AND BUILD GUIDE (WebUI - Front)
 
-If you just want to play with the game, you can skip to [this section](#tldr).
 If you have [Docker](https://www.docker.com/) or [Rancher](https://www.rancher.com/) installed, you can skip to [this section](#docker).
 If you only want to run the project on your own machine, just skip to [this section](#install-and-start-guide-server---back).
 If you want to build and run the project from scratch on your own machine, well, there's a bit of reading, and it starts now.
