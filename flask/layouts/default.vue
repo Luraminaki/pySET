@@ -9,7 +9,7 @@
 
     <BCollapse id="nav-collapse" is-nav>
       <BNavbarNav class="ms-auto mb-2 mb-lg-0">
-        <HRControl :gameID="gameID"
+        <HRControl :gameAuth="{ gameID: gameID, gameSecret: gameSecret }"
                    :gameState="gameState"
                    :playerState="playerState"
 
@@ -27,14 +27,25 @@
   <div class="mt-2 is-center">
 
     <b-modal v-model="firstLaunch" title="Create / Join" @hide.prevent hide-footer>
-      <BFormInput v-model="gameID" :state="validGameID" type="text" :placeholder="`Game ID (${minIDLength} characters minimum)`"/>
-      <BButton class="mt-2" pill :disabled="!validGameID" @click="gameCreateJoin()">
-        CREATE / JOIN
-      </BButton>
+      <b-accordion>
+        <b-accordion-item title="NEW" visible>
+          <BFormInput v-model="gameID" :state="validGameID" type="text" :placeholder="`Game ID (${minIDLength} characters minimum)`"/>
+          <BFormInput class="mt-1" v-model="gameSecret" type="password" :placeholder="`Password (Leave empty if free to join)`"/>
+          <BButton class="mt-2" pill :disabled="!validGameID" @click="gameCreateJoin(gameID, gameSecret)">
+            CREATE / JOIN
+          </BButton>
+        </b-accordion-item>
+        <b-accordion-item v-for="game in games" :key="game.game_id" :title="String(game.has_secret ? '🔒' : '') + game.game_id">
+          <BFormInput v-model="gameSecret" v-if="game.has_secret" type="password" :placeholder="`Password`"/>
+          <BButton class="mt-2" pill :disabled="game.has_secret && String(gameSecret) == ''" @click="gameCreateJoin(game.game_id, String(game.has_secret ? gameSecret : ''))">
+            JOIN
+          </BButton>
+        </b-accordion-item>
+      </b-accordion>
     </b-modal>
 
     <SetGame v-if="!firstLaunch"
-             :gameID="gameID"
+             :gameAuth="{ gameID: gameID, gameSecret: gameSecret }"
              :gameState="gameState"
              :playerState="playerState"
 
@@ -51,7 +62,7 @@
 
       <div>
         <span class="badge bg-dark">games</span>
-        <span :class="games < maxGames ? 'badge bg-success' : 'badge bg-danger'">{{ games }} / {{ maxGames }}</span>
+        <span :class="games.length < maxGames ? 'badge bg-success' : 'badge bg-danger'">{{ games.length }} / {{ maxGames }}</span>
       </div>
     </div>
 
@@ -77,12 +88,13 @@ config.value = await useState('config').value.then(r => r);
 
 const modalGenericMessage = ref({triggerModal: false, modalTitle: '', modalMessage: ''});
 
-const games = ref("?");
+const games = ref([]);
 const maxGames = ref(10);
 
 const minIDLength = ref(3)
 const gameID = ref('');
 const validGameID = computed(() => (gameID.value.length >= minIDLength.value && gameID.value.length <= 36));
+const gameSecret = ref('');
 const firstLaunch = ref(true);
 
 const gameState = ref(GameStates.NEW.name);
@@ -182,11 +194,15 @@ const checkBackend = async () => {
   games.value = resp.content.games;
 };
 
-const gameCreateJoin = async () => {
-  const respInit = await initSetGame(modalGenericMessage, { gameID: gameID.value });
+const gameCreateJoin = async (formGameID, formGameSecret) => {
+  gameID.value = formGameID;
+  gameSecret.value = formGameSecret;
+
+  const respInit = await initSetGame(modalGenericMessage, { gameID: gameID.value, gameSecret: gameSecret.value });
   if (!respInit.status){
     firstLaunch.value = true;
     gameID.value = '';
+    gameSecret.value = '';
     return { status: false };
   }
 
@@ -194,6 +210,7 @@ const gameCreateJoin = async () => {
   if (!respGame.status){
     firstLaunch.value = true;
     gameID.value = '';
+    gameSecret.value = '';
     return { status: false };
   }
 
@@ -220,7 +237,7 @@ const getStatesAndStats = async () => {
 };
 
 const getCurrentGameState = async () => {
-  const resp = await getGameState(modalGenericMessage, { gameID: gameID.value });
+  const resp = await getGameState(modalGenericMessage, { gameID: gameID.value, gameSecret: gameSecret.value });
   if (!resp.status) {
     return { status: resp.status, gameState: GameStates.UNDEFINED.name };
   }
@@ -228,7 +245,7 @@ const getCurrentGameState = async () => {
 };
 
 const getCurrentPlayersStats = async () => {
-  const resp = await getPlayersInfos(modalGenericMessage, { gameID: gameID.value });
+  const resp = await getPlayersInfos(modalGenericMessage, { gameID: gameID.value, gameSecret: gameSecret.value });
   if (!resp.status) {
     return { status: resp.status, playersStats: [] };
   }

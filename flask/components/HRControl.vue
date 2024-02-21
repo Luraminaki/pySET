@@ -48,7 +48,7 @@ import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
 // ##################
 
 const props = defineProps({
-  gameID: { type: String, required: true },
+  gameAuth: { type: Object, required: true },
   gameState: { type: String, required: true },
   playerState: { type: String, required: true },
 });
@@ -104,7 +104,7 @@ const getHelp = async () => {
 const reset = async (hardReset) => {
   modalReset.value.do = false;
 
-  const resp = await resetGame(modalGenericMessage, { gameID: props.gameID, hard: hardReset });
+  const resp = await resetGame(modalGenericMessage, { ...props.gameAuth, hard: hardReset });
   if (!resp.status) {
     return { status: resp.status };
   }

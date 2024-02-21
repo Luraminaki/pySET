@@ -36,7 +36,7 @@ import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
 // ##################
 
 const props = defineProps({
-  gameID: { type: String, required: true },
+  gameAuth: { type: Object, required: true },
   gameState: { type: String, required: true },
   playerState: { type: String, required: true },
   playersStats: { type: Array, required: false, default() { return [] } },
@@ -181,7 +181,7 @@ const proceedWithSelectedPlayer = async (playerName) => {
 
 const changeGameStateRequest = async () => {
   const enablePause = props.gameState == GameStates.RUNNING.name;
-  const respGameState = await changeGameState(modalGenericMessage, { gameID: props.gameID, enablePause: enablePause });
+  const respGameState = await changeGameState(modalGenericMessage, { ...props.gameAuth, enablePause: enablePause });
   if (!respGameState.status) {
     selectedPlayer.value = '';
     return { status: respGameState.status };
@@ -197,7 +197,7 @@ const changeGameStateRequest = async () => {
 };
 
 const getRandomHint = async () => {
-  const resp = await getHints(modalGenericMessage, { gameID: props.gameID });
+  const resp = await getHints(modalGenericMessage, { ...props.gameAuth });
   if (!resp.status) {
     return { status: resp.status };
   }
@@ -219,7 +219,7 @@ const sendSelection = async (playerName) => {
                               data: {action: 'untoggle-request'},
                               from: [componentName.value] });
 
-  const respSubmit = await submitSet(modalGenericMessage, { gameID: props.gameID, playerName: playerName, set: props.selectedCards });
+  const respSubmit = await submitSet(modalGenericMessage, { ...props.gameAuth, playerName: playerName, set: props.selectedCards });
 
   setCalled.value = false;
   selectedPlayer.value = '';

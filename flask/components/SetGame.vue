@@ -1,7 +1,7 @@
 <template>
   <BCardGroup deck class="col-8 pt-2">
     <BCard title="SET">
-      <SetGrid :gameID="props.gameID"
+      <SetGrid :gameAuth="props.gameAuth"
                :gameState="props.gameState"
                :playerState="props.playerState"
 
@@ -15,7 +15,7 @@
     </BCard>
 
     <BCard :title="playersStats.length <= 1 ? 'PLAYER' : 'PLAYERS'">
-      <PlayerCRUD :gameID="props.gameID"
+      <PlayerCRUD :gameAuth="props.gameAuth"
                   :gameState="props.gameState"
                   :playerState="props.playerState"
 
@@ -25,7 +25,7 @@
 
       <div class="mt-3"></div>
 
-      <PlayerScore :gameID="props.gameID"
+      <PlayerScore :gameAuth="props.gameAuth"
                    :gameState="props.gameState"
                    :playerState="props.playerState"
 
@@ -45,7 +45,7 @@ import { PlayerStates } from "~/assets/states.js";
 // ##################
 
 const props = defineProps({
-  gameID: { type: String, required: true },
+  gameAuth: { type: Object, required: true },
   gameState: { type: String, required: true },
   playerState: { type: String, required: true },
   playersStats: { type: Array, required: false, default() { return [] } },

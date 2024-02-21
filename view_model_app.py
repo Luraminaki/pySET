@@ -58,7 +58,8 @@ class ViewModelApp():
                        "07": "INVALID_PLAYER_NAME",
                        "08": "PLAYER_NOT_FOUND",
                        "09": "SET_NOT_FOUND",
-                       "10": "CARDS_NOT_FOUND"}
+                       "10": "CARDS_NOT_FOUND",
+                       "11": "INVALID_SECRET"}
 
 
     ################################################
@@ -77,7 +78,7 @@ class ViewModelApp():
                 del self.set_games[game_id]
 
 
-    def _sanity_check(self, curr_func: str, params=None, ignore_empty: bool=False, ignore_missing: bool=False) -> dict[str, Union[dict, str]]:
+    def _sanity_check(self, curr_func: str, params=None, ignore_empty_game_id: bool=False, ignore_empty_game_secret: bool=False, ignore_missing_game: bool=False) -> dict[str, Union[dict, str]]:
         try:
             data: dict = json.loads(params)
         except json.decoder.JSONDecodeError:
@@ -87,18 +88,23 @@ class ViewModelApp():
         self.logger.info("%s -- %s: %s", curr_func, self.ack['01'], data)
 
         game_id = data.get('gameID', '')[:self.config['SESSION_NAME_MAX_CHARS']]
+        game_secret = data.get('gameSecret', '')[:self.config['SESSION_NAME_MAX_CHARS']]
 
-        if not ignore_empty and game_id == '':
+        if not ignore_empty_game_id and game_id == '':
             return { 'status': StatusFunction.ERROR.name, 'error': self.errors['03'] }
 
-        if not ignore_missing and self.set_games.get(game_id, None) is None:
+        if not ignore_missing_game and self.set_games.get(game_id, None) is None:
             return { 'status': StatusFunction.ERROR.name, 'error': self.errors['05'] }
+
+        if not ignore_empty_game_secret and self.set_games.get(game_id, None) is not None and self.set_games.get(game_id, {}).get('game_secret', '') != game_secret:
+            return { 'status': StatusFunction.ERROR.name, 'error': self.errors['11'] }
 
         if len(self.set_games) >= self.config.get('MAX_SESSIONS', 10) and self.set_games.get(game_id, None) is None:
             return { 'status': StatusFunction.ERROR.name, 'error': self.errors['02'] }
 
         return { 'status': StatusFunction.SUCCESS.name,
                  'game_id': game_id,
+                 'game_secret': game_secret,
                  'data': data,
                  'error': '' }
 
@@ -138,22 +144,25 @@ class ViewModelApp():
 
         self._clean_inactive_games(curr_func)
 
-        return { 'status': StatusFunction.SUCCESS.name, 'games': len(self.set_games), 'error': '' }
+        return { 'status': StatusFunction.SUCCESS.name,
+                 'games': [ {'game_id': game_id, 'has_secret': game.get('game_secret', '') != ''} for game_id, game in self.set_games.items() ],
+                 'error': '' }
 
 
     @export
     def init_set_game(self, params=None) -> dict:
         curr_func = inspect.currentframe().f_code.co_name
 
-        sanity_check = self._sanity_check(curr_func, params, ignore_empty=False, ignore_missing=True)
+        sanity_check = self._sanity_check(curr_func, params, ignore_empty_game_id=False, ignore_missing_game=True)
         if sanity_check['status'] == StatusFunction.ERROR.name:
             return sanity_check
 
         game_id = sanity_check['game_id']
+        game_secret = sanity_check['game_secret']
 
         if self.set_games.get(game_id, None) is None:
             now = int(time.time())
-            self.set_games[game_id] = {'set_game': Game(Grid()), 'created': now, 'last_accessed': now, 'ttl': self.config.get('SESSION_TTL_SECONDS', 1800)}
+            self.set_games[game_id] = {'set_game': Game(Grid()), 'game_secret': game_secret, 'created': now, 'last_accessed': now, 'ttl': self.config.get('SESSION_TTL_SECONDS', 1800)}
             self.set_games[game_id]['set_game'].set_penalty_time(self.config.get('PENALTY_TIMEOUT_SECONDS', 20))
             self.set_games[game_id]['set_game'].set_max_player(self.config.get('MAX_PLAYERS', 4))
 
@@ -166,7 +175,7 @@ class ViewModelApp():
 
         self._clean_inactive_games(curr_func)
 
-        sanity_check = self._sanity_check(curr_func, params, ignore_empty=True, ignore_missing=True)
+        sanity_check = self._sanity_check(curr_func, params, ignore_empty_game_id=True, ignore_empty_game_secret=True, ignore_missing_game=True)
         if sanity_check['status'] == StatusFunction.ERROR.name:
             return sanity_check
 
