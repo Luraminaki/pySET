@@ -9,7 +9,7 @@
 
     <BCollapse id="nav-collapse" is-nav>
       <BNavbarNav class="ms-auto mb-2 mb-lg-0">
-        <HRControl :gameAuth="{ gameID: gameID, gameSecret: gameSecret }"
+        <HRControl :gameAuth="gameAuth"
                    :gameState="gameState"
                    :playerState="playerState"
 
@@ -45,7 +45,7 @@
     </b-modal>
 
     <SetGame v-if="!firstLaunch"
-             :gameAuth="{ gameID: gameID, gameSecret: gameSecret }"
+             :gameAuth="gameAuth"
              :gameState="gameState"
              :playerState="playerState"
 
@@ -95,6 +95,8 @@ const minIDLength = ref(3)
 const gameID = ref('');
 const validGameID = computed(() => (gameID.value.length >= minIDLength.value && gameID.value.length <= 36));
 const gameSecret = ref('');
+const gameAuth = computed(() => ({ gameID: gameID.value, gameSecret: gameSecret.value }));
+
 const firstLaunch = ref(true);
 
 const gameState = ref(GameStates.NEW.name);
@@ -198,7 +200,7 @@ const gameCreateJoin = async (formGameID, formGameSecret) => {
   gameID.value = formGameID;
   gameSecret.value = formGameSecret;
 
-  const respInit = await initSetGame(modalGenericMessage, { gameID: gameID.value, gameSecret: gameSecret.value });
+  const respInit = await initSetGame(modalGenericMessage, {...gameAuth.value});
   if (!respInit.status){
     firstLaunch.value = true;
     gameID.value = '';
@@ -237,7 +239,7 @@ const getStatesAndStats = async () => {
 };
 
 const getCurrentGameState = async () => {
-  const resp = await getGameState(modalGenericMessage, { gameID: gameID.value, gameSecret: gameSecret.value });
+  const resp = await getGameState(modalGenericMessage, gameAuth.value);
   if (!resp.status) {
     return { status: resp.status, gameState: GameStates.UNDEFINED.name };
   }
@@ -245,7 +247,7 @@ const getCurrentGameState = async () => {
 };
 
 const getCurrentPlayersStats = async () => {
-  const resp = await getPlayersInfos(modalGenericMessage, { gameID: gameID.value, gameSecret: gameSecret.value });
+  const resp = await getPlayersInfos(modalGenericMessage, gameAuth.value);
   if (!resp.status) {
     return { status: resp.status, playersStats: [] };
   }
