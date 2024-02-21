@@ -1,6 +1,10 @@
 # SET
 
-Fun project where I could cram in some of the knowledge I gained from coding in VUE-2 and VUE-3 (With NUXT) and Python-3. Feel free to check the [game rules](https://en.wikipedia.org/wiki/Set_(card_game)#Games) before playing... In its current state, the game is meant to be played on a single screen, and you will need to know how to use the terminal command prompt in order to build / install / run this game.
+Fun project where I could cram in some of the knowledge I gained from coding in VUE-2 and VUE-3 (With NUXT) and Python-3.
+
+Feel free to check the [game rules](https://en.wikipedia.org/wiki/Set_(card_game)#Games) before playing... In its current state, the game is meant to be played on a **SINGLE SHARED SCREEN**.
+
+You will need to know (among other few things) how to use the terminal command prompt in order to build + install + run this game on your own computer. If not, you can directly skip to [this section](#tldr).
 
 ## VERSIONS
 
