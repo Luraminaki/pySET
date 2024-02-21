@@ -21,7 +21,7 @@ export default defineNuxtConfig({
         style: 'overflow-y: auto; height: -webkit-fill-available;'
       },
       meta: [
-        { name: 'description', content: 'pySET WebApp' }
+        { name: 'description', content: 'SET! game web app written in VUE 3 and Python 3.' }
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: 'favicon.ico' }
