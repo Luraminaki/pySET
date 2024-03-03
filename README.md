@@ -88,7 +88,7 @@ or
 gunicorn -c gunicorn/dev_app.py
 ```
 
-You can now open your favorite web browser and [start-the-game](http://localhost/)
+You can now open your favorite web browser and [start-the-game](http://localhost:10000)
 
 ## DOCKER
 
