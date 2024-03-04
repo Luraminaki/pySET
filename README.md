@@ -32,6 +32,9 @@ You will need to know (among other few things) how to use the terminal command p
 
 ## INSTALL AND BUILD GUIDE (WebUI - Front)
 
+<details>
+<summary>FRONT GUIDE</summary>
+
 If you have [Docker](https://www.docker.com/) or [Rancher](https://www.rancher.com/) installed, you can skip to [this section](#docker).
 If you only want to run the project on your own machine, just skip to [this section](#install-and-start-guide-server---back).
 If you want to build and run the project from scratch on your own machine, well, there's a bit of reading, and it starts now.
@@ -47,8 +50,12 @@ cd pySET/flask
 yarn install
 yarn generate
 ```
+</details>
 
 ## INSTALL AND START GUIDE (Server - Back)
+
+<details>
+<summary>BACK GUIDE</summary>
 
 In this section, I will assume that you either followed the building instructions above, or downloaded and extracted [the latest release](https://github.com/Luraminaki/pySET/releases).
 
@@ -89,8 +96,12 @@ gunicorn -c gunicorn/dev_app.py
 ```
 
 You can now open your favorite web browser and [start-the-game](http://localhost:10000)
+</details>
 
 ## DOCKER
+
+<details>
+<summary>DOCKER GUIDE</summary>
 
 I wrote a `Dockerfile` as a training exercise and for those that want something that "just works". (Though, you have to know how [Docker](https://www.docker.com/) or [Rancher](https://www.rancher.com/) works beforehand...)
 
@@ -99,6 +110,7 @@ cd pySET
 docker build -t pyset:0.2 .
 docker run -d -p 10000:10000 pyset:0.2
 ```
+</details>
 
 ## POSSIBLE FUTURE UPDATES
 
