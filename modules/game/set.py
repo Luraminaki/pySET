@@ -352,9 +352,9 @@ def main(full_init_start=False) -> None:
                 print(f"The following pick : {pick} is not a valid set\n")
 
         else:
-            # Oh... Turns out there is no set that can be made from the cards laid one the playground... Let's add some cards to the playground
+            # Oh... Turns out there is no set that can be made from the cards laid on the playground... Let's add some cards to the playground
             set_grid.draw_cards_if_possible()
-            # And check when the next loop starts if there is at least a set that can be made from the cards laid one the playground
+            # And check when the next loop starts if there is at least a set that can be made from the cards laid on the playground
             set_grid.update_unique_sets_on_grid()
 
         print("#######################################################")
