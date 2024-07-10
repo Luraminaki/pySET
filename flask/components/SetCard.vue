@@ -1,6 +1,7 @@
 <template>
 
-  <BCard overlay border-variant="secondary"
+  <BCard no-body
+         overlay border-variant="secondary"
          :img-src="`/cards/${props.card}.png`"
          :img-alt="props.card"
          :id="`card-${props.card}`"
