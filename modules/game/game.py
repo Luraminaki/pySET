@@ -23,9 +23,6 @@ from modules.game.player import Player
 #===================================================================================================
 
 
-__version__ = '0.1.0'
-
-
 class GameState(enum.Enum):
     NEW = enum.auto()
     RUNNING = enum.auto()

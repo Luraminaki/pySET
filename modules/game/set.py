@@ -23,9 +23,6 @@ from modules.misc.helpers import int2base, most_frequent_flavor
 #===================================================================================================
 
 
-__version__ = '0.1.0'
-
-
 class Grid():
     def __init__(self, features: list=None, find_all_unique_sets: bool=False):
         self._rand = random.Random()

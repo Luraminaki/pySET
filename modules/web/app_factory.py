@@ -12,14 +12,15 @@ import json
 import typing
 import inspect
 from functools import wraps
+import logging
 
 from werkzeug.datastructures import ImmutableMultiDict, FileStorage
 from flask_classful import FlaskView, route
 from flask import  Response, render_template, request
 #===================================================================================================
 
-
-__version__ = '0.1.0'
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class AppView(FlaskView):
@@ -76,12 +77,12 @@ def export(func: typing.Callable[..., typing.Optional[typing.Any]]=None, req: st
         @wraps(func)
         def wrapper(*args, **kwargs) -> str | Response:
             if request.args:
-                print(f"{request.endpoint} -- Reached with URL params {dict(request.args)} -- (Not supported)")
+                logger.warning(f"{request.endpoint} -- Reached with URL params {dict(request.args)} -- (Not supported)")
 
             try:
                 func_resp = request_strategy(func, req)
             except Exception as err:
-                print(f"{request.endpoint} -- ERROR -- {repr(err)}")
+                logger.error(f"{request.endpoint} -- {repr(err)}")
                 func_resp = { 'status': 'ERROR', 'error': repr(err) }
 
             if isinstance(func_resp, (str, Response)):
@@ -102,10 +103,10 @@ def export(func: typing.Callable[..., typing.Optional[typing.Any]]=None, req: st
 
     except Exception as err_01:
         try:
-            print(f"{curr_func} -- Something went wrong when trying to wrap function {func.__name__} : {repr(err_01)}")
+            logger.warning(f"{curr_func} -- Something went wrong when trying to wrap function {func.__name__} : {repr(err_01)}")
 
         except Exception as err_02:
-            print(f"{curr_func} -- Wrapping function triggered exception {repr(err_01)}, and trying to retrieve function name triggered exception {repr(err_02)}")
+            logger.error(f"{curr_func} -- Wrapping function triggered exception {repr(err_01)}, and trying to retrieve function name triggered exception {repr(err_02)}")
 
     raise RuntimeError
 

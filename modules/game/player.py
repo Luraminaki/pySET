@@ -17,9 +17,6 @@ from typing import Union
 #===================================================================================================
 
 
-__version__ = '0.1.0'
-
-
 class Player():
     fold_cards_if_possible: callable
 

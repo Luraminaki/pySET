@@ -41,7 +41,7 @@ class ViewModelApp():
         self.logger = logging.getLogger("View_Model_App")
         self.logger.addHandler(logging.NullHandler())
 
-        self.logger.info('%s version %s', self.__class__.__name__, __version__)
+        self.logger.info(f"{self.__class__.__name__} version {__version__}")
 
         self.set_games: dict[str, dict[str, Union[Game, int]]] = {}
 
@@ -73,8 +73,8 @@ class ViewModelApp():
             inactive_games = [game_id for game_id, game in self.set_games.items() if (now - game['created']) >= self.config.get('SESSION_TTL_SECONDS', 1800)]
 
             for game_id in inactive_games:
-                last_accessed = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(self.set_games[game_id]['last_accessed']))
-                self.logger.info("%s -- %s: %s -- last_accessed: %s", curr_func, self.ack['03'], game_id, last_accessed)
+                last_accessed = time.strftime('%Y-%m-%d %H:%M:{}', time.localtime(self.set_games[game_id]['last_accessed']))
+                self.logger.info(f"{curr_func} -- {self.ack['03']}: {game_id} -- last_accessed: {last_accessed}")
                 del self.set_games[game_id]
 
 
@@ -82,10 +82,10 @@ class ViewModelApp():
         try:
             data: dict = json.loads(params)
         except json.decoder.JSONDecodeError:
-            self.logger.error("%s -- %s: %s", curr_func, self.errors['01'], params)
+            self.logger.error(f"{curr_func} -- {self.errors['01']}: {params}")
             return { 'status': StatusFunction.ERROR.name, 'error': self.errors['01'] }
 
-        self.logger.info("%s -- %s: %s", curr_func, self.ack['01'], data)
+        self.logger.info(f"{curr_func} -- {self.ack['01']}: {data}")
 
         game_id = data.get('gameID', '')[:self.config['SESSION_NAME_MAX_CHARS']]
         game_secret = data.get('gameSecret', '')[:self.config['SESSION_NAME_MAX_CHARS']]
@@ -114,7 +114,7 @@ class ViewModelApp():
             self.set_games[game_id]['last_accessed'] = int(time.time())
             return True
         except Exception as err:
-            self.logger.error("%s -- %s: %s", curr_func, self.ack['01'], repr(err))
+            self.logger.error(f"{curr_func} -- {self.ack['01']}: {repr(err)}")
             return False
 
 
@@ -189,7 +189,7 @@ class ViewModelApp():
             return { 'status': StatusFunction.ERROR.name, 'error': self.errors['06'] }
 
         self.set_games = {}
-        self.logger.info("%s -- %s: %s", curr_func, self.ack['04'], 'Lord Vader will be pleased')
+        self.logger.info(f"{curr_func} -- {self.ack['04']}: Lord Vader will be pleased")
 
         return { 'status': StatusFunction.SUCCESS.name, 'error': '' }
 
@@ -345,7 +345,7 @@ class ViewModelApp():
 
         enable_pause = data.get('enablePause', False)
         self.set_games[game_id]['set_game'].update_game(enable_pause)
-        self.logger.info("%s -- Game is now: %s", curr_func, self.set_games[game_id]['set_game'].get_game_state())
+        self.logger.info(f"{curr_func} -- Game is now: { self.set_games[game_id]['set_game'].get_game_state()}")
         self.set_games[game_id]['set_game'].grid.pretty_print_grid()
 
         self._update_game_ttl(curr_func, game_id)

@@ -1,3 +1,4 @@
+logging-reset
 gunicorn
 Flask
 Flask-Classful

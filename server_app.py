@@ -13,6 +13,7 @@ import sys
 import json
 import argparse
 import logging
+import logreset
 from pathlib import Path
 
 from flask_cors import CORS
@@ -25,14 +26,10 @@ from modules.web.app_factory import AppView, TemplateView
 #=======================================================================
 
 
-__version__ = '0.1.0'
+logreset.reset_logging()
 
-
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)-8s - %(message)s')
-console_handler = logging.StreamHandler(stream=sys.stdout)
-console_handler.setFormatter(formatter)
 logger = logging.getLogger()
-logger.addHandler(console_handler)
+logger.setLevel(logging.INFO)
 
 
 def create_app(config: str='config.json', scheme: str='https://', subdomain: str='localhost') -> Flask:
@@ -41,9 +38,17 @@ def create_app(config: str='config.json', scheme: str='https://', subdomain: str
         conf = json.load(f)
 
     try:
-        level = logging.getLevelName(conf['logging_level'])
+        level = conf['logging_level']
     except KeyError:
         level = logging.INFO
+
+    logging.basicConfig(
+        level=level,
+            format="[%(asctime)s] [%(name)s] [%(levelname)s]: %(message)s",
+            handlers=[
+                logging.StreamHandler(sys.stdout)
+            ]
+        )
     logger.setLevel(level)
 
     app = Flask(__name__, static_folder='flask/.output/public/', template_folder='flask/.output/public/', static_url_path='/')
