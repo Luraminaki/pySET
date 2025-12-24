@@ -9,7 +9,7 @@ Created on Wed Jan 25 11:17:51 2023
 
 #===================================================================================================
 import time
-from typing import Union
+from typing import Union, Callable
 
 #pylint: disable=wrong-import-order, wrong-import-position
 
@@ -18,7 +18,7 @@ from typing import Union
 
 
 class Player():
-    fold_cards_if_possible: callable
+    fold_cards_if_possible: Callable
 
     def __init__(self, player_name: str='', player_color: str='#000000', is_ai: bool=False, difficulty: dict=None):
         self._name = player_name
