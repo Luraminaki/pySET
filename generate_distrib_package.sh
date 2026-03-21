@@ -12,8 +12,8 @@ git checkout ${BRANCH_OR_TAG}
 git pull
 
 cd flask
-yarn install
-yarn generate
+npm install
+npm run generate
 cd..
 
 rm -f ${DEST}.zip

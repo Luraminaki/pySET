@@ -41,14 +41,13 @@ If you want to build and run the project from scratch on your own machine, well,
 
 - Clone, or download + extract [this project](https://github.com/Luraminaki/pySET/archive/refs/heads/main.zip)
 - For `NodeJS` installation, consult the following [link](https://nodejs.org/en/download)
-- For `Yarn` installation, consult the following [link](https://classic.yarnpkg.com/lang/en/docs/install/)
 
 Once done, open a new terminal in the directory `pySET` and type the following commands to build the WebUI.
 
 ```sh
 cd pySET/flask
-yarn install
-yarn generate
+npm install
+npm run generate
 ```
 </details>
 
@@ -86,7 +85,7 @@ pip install -U -r requirements.txt
 Once done, you can run the project with either
 
 ```sh
-python3 server_app.py -c config.json
+python server_app.py -c config.json
 ```
 
 or

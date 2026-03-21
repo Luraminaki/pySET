@@ -1,15 +1,14 @@
-FROM node:21.6.1-alpine AS buildfront
+FROM node:lts-alpine AS buildfront
 
 COPY ./flask /flask
 
 WORKDIR /flask
 
-RUN corepack enable
-RUN yarn install
-RUN yarn generate
+RUN npm install
+RUN npm run generate
 
 
-FROM python:3.12.1-bullseye
+FROM python:3.14.3-bullseye
 ENV PYTHONUNBUFFERED 1
 
 COPY --from=buildfront ./flask/.output /flask/.output/

@@ -1,10 +1,18 @@
 @echo off
 setlocal EnableDelayedExpansion
 
+SET 7ZEXEC=C:\Program Files\7-Zip\7z.exe
 SET REPO=git@github.com:Luraminaki\pySET.git
 SET BRANCH_OR_TAG=main
 SET INSTALL_DIR=pySET
 SET DEST=pySET.zip
+
+IF NOT EXIST "%7ZEXEC%" (
+    echo 7-Zip not found at %7ZEXEC%
+    echo Please install 7-Zip or update the script with the correct path.
+    exit /b 1
+)
+
 
 echo Generating %DEST% from %BRANCH_OR_TAG% from repository %REPO%
 git "fetch" "--all" "-p"
@@ -12,17 +20,17 @@ git "checkout" %BRANCH_OR_TAG%
 git "pull"
 
 cd "flask"
-call yarn install
-call yarn generate
+call npm install
+call npm run generate
 cd..
 
 DEL %DEST%
-call cmd /C ""C:\Program Files\7-Zip\7z.exe" a -tzip %DEST% "README.md""
-call cmd /C ""C:\Program Files\7-Zip\7z.exe" a -tzip %DEST% "*.py""
-call cmd /C ""C:\Program Files\7-Zip\7z.exe" a -tzip %DEST% "requirements.txt""
-call cmd /C ""C:\Program Files\7-Zip\7z.exe" a -tzip %DEST% "config.json""
-call cmd /C ""C:\Program Files\7-Zip\7z.exe" a -tzip %DEST% "modules/*""
-call cmd /C ""C:\Program Files\7-Zip\7z.exe" a -tzip %DEST% "gunicorn/*.py""
-call cmd /C ""C:\Program Files\7-Zip\7z.exe" a -tzip %DEST% "flask/.output/*""
+call cmd /C ""%7ZEXEC%" a -tzip %DEST% "README.md""
+call cmd /C ""%7ZEXEC%" a -tzip %DEST% "*.py""
+call cmd /C ""%7ZEXEC%" a -tzip %DEST% "requirements.txt""
+call cmd /C ""%7ZEXEC%" a -tzip %DEST% "config.json""
+call cmd /C ""%7ZEXEC%" a -tzip %DEST% "modules/*""
+call cmd /C ""%7ZEXEC%" a -tzip %DEST% "gunicorn/*.py""
+call cmd /C ""%7ZEXEC%" a -tzip %DEST% "flask/.output/*""
 
-echo "Done !"
+echo Done !
