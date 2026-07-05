@@ -14,8 +14,8 @@ git pull
 cd flask
 npm install
 npm run generate
-cd..
+cd ..
 
 rm -f ${DEST}.zip
-zip -qr ${DEST}.zip ./{README.md,*.py,requirements.txt,config.json,modules/*,gunicorn/*.py} ./flask/.output/*
+zip -qr ${DEST}.zip ./{README.md,INSTALL.md,pyproject.toml,config.json,.env.example,pyset/*,gunicorn/*.py} ./flask/.output/*
 echo "Done !"

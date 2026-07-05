@@ -6,6 +6,8 @@ flask/.output
 flask/dist
 .yarnclean
 *.pyc
+*.log
+.env
 .venv/
 .venv
 .venv.lnk

@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 SET 7ZEXEC=C:\Program Files\7-Zip\7z.exe
-SET REPO=git@github.com:Luraminaki\pySET.git
+SET REPO=git@github.com:Luraminaki/pySET.git
 SET BRANCH_OR_TAG=main
 SET INSTALL_DIR=pySET
 SET DEST=pySET.zip
@@ -22,14 +22,15 @@ git "pull"
 cd "flask"
 call npm install
 call npm run generate
-cd..
+cd ..
 
 DEL %DEST%
 call cmd /C ""%7ZEXEC%" a -tzip %DEST% "README.md""
-call cmd /C ""%7ZEXEC%" a -tzip %DEST% "*.py""
-call cmd /C ""%7ZEXEC%" a -tzip %DEST% "requirements.txt""
+call cmd /C ""%7ZEXEC%" a -tzip %DEST% "INSTALL.md""
+call cmd /C ""%7ZEXEC%" a -tzip %DEST% "pyproject.toml""
 call cmd /C ""%7ZEXEC%" a -tzip %DEST% "config.json""
-call cmd /C ""%7ZEXEC%" a -tzip %DEST% "modules/*""
+call cmd /C ""%7ZEXEC%" a -tzip %DEST% ".env.example""
+call cmd /C ""%7ZEXEC%" a -tzip %DEST% "pyset/*""
 call cmd /C ""%7ZEXEC%" a -tzip %DEST% "gunicorn/*.py""
 call cmd /C ""%7ZEXEC%" a -tzip %DEST% "flask/.output/*""
 

@@ -1,6 +1,0 @@
-logging-reset
-gunicorn
-Flask
-Flask-Classful
-flask-cors
-werkzeug

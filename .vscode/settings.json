@@ -1,4 +1,4 @@
-{
+ {
     "files.exclude": {
         "**/.git": true,
         "**/.svn": true,
@@ -6,15 +6,17 @@
         "**/CVS": true,
         "**/.DS_Store": true,
         "**/Thumbs.db": true,
-        "*.egg-info": true
+        "*.egg-info": true,
+        "*.venv": true
     },
     "breadcrumbs.enabled": true,
     "editor.formatOnSave": false,
     "git.autofetch": true,
     "pylint.args": [
-        "--disable=C0103, C0111, C0209, C0301, C0415, E0401, R0201, R0902, R0903, R0904, R0913, R0914, R0915, W0102, W1202, W1203, W0702, W0703",
+        "--disable=C0103, C0209, C0301, C0415, E0401, E1101, R0902, R0903, R0904, R0913, R0914, R0915, W0102, W1202, W1203, W0702, W0703",
         "--extension-pkg-whitelist=cv2",
-        "--generated-members=cv2.*"
+        "--generated-members=cv2.*",
+        "--load-plugins", "pylint_pydantic"
     ],
     "explorer.confirmDelete": false,
     "files.associations": {
@@ -76,11 +78,36 @@
         "variant": "cpp"
     },
     "python.testing.pytestArgs": [
-        ""
+        "tb_server/tests/"
     ],
+    "js/ts.tsdk.path": "node_modules/typescript/lib",
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": false,
-    "python.testing.promptToConfigure": false,
-    "python.languageServer": "Pylance",
-    "typescript.tsdk": "node_modules/typescript/lib"
+    "python.testing.pytestEnabled": true,
+    "python.languageServer": "None",
+    "python.analysis.typeCheckingMode": "off",
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportOptionalMemberAccess": "none",
+        "reportAttributeAccessIssue": "none",
+    },
+    "python.analysis.extraPaths": [],
+    "python.analysis.useLibraryCodeForTypes": true,
+    "python.analysis.stubPath": "",
+    "editor.inlayHints.enabled": "off",
+    "basedpyright.analysis.diagnosticSeverityOverrides": {
+        // "reportOptionalMemberAccess": "none",
+        // "reportAttributeAccessIssue": "none",
+        "reportAny": "none",
+        "reportMissingTypeArgument": "none",
+        "reportUnknownArgumentType": "none",
+        "reportUnknownMemberType": "none",
+        "reportUnknownParameterType": "none",
+        "reportUnknownVariableType": "none"
+    },
+    "flake8.enabled": true,
+    "flake8.args": [
+        "--ignore=E129,E265,E501,W503",
+    ],
+    "pylint.enabled": true,
+    "pylint.importStrategy": "fromEnvironment",
+    "python-envs.pythonProjects": []
 }

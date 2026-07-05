@@ -1,0 +1,78 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pyset"
+version = "0.2.0"
+description = "SET card game -- Flask API backend for the Nuxt/Vue frontend"
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [
+    { name = "Luraminaki" },
+]
+dependencies = [
+    "Flask",
+    "Flask-Classful",
+    "flask-cors",
+    "Werkzeug",
+    "gunicorn",
+    "pydantic>=2",
+    "pydantic-settings>=2",
+    "python-dotenv",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff",
+    "mypy",
+    "pytest",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["pyset"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "B", "SIM", "N", "C4", "RET", "D"]
+ignore = [
+    "D203", # incompatible with D211 (no-blank-line-before-class)
+    "D213", # incompatible with D212 (multi-line-summary-first-line)
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.ruff.lint.per-file-ignores]
+"**/__init__.py" = ["D104"] # empty package marker, no docstring needed
+"pyset/modules/game/set.py" = ["T201"] # demo main() uses print() on purpose
+"pyset/modules/game/game.py" = ["T201"] # demo main() uses print() on purpose
+"tests/**" = ["D"] # test names are self-documenting
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ["pydantic.mypy"]
+mypy_path = "."
+explicit_package_bases = true
+warn_return_any = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+no_implicit_optional = true
+
+[[tool.mypy.overrides]]
+module = ["flask_classful.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
