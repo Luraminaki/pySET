@@ -2,52 +2,37 @@
 
   <div class="is-flex">
     <div>
-      <div :title="`A player penalty lasts for ${config.PENALTY_TIMEOUT_SECONDS} seconds`">Penalty time</div>
+      <div :title="`A player penalty lasts for ${store.config.PENALTY_TIMEOUT_SECONDS} seconds`">Penalty time</div>
       <BProgress>
-        <BProgressBar v-for="(_, index) in props.playersStats" :value="playersBarPenaltyProgress[index]" :style="`background-color:${variantsPenaltyProgress[index]}`" />
+        <BProgressBar v-for="(_, index) in store.playersStats" :value="playersBarPenaltyProgress[index]" :style="`background-color:${variantsPenaltyProgress[index]}`" />
       </BProgress>
     </div>
 
     <div>
-      <div :title="`Submitting duration is ${config.SUBMIT_TIMEOUT_SECONDS} seconds`">Submit time</div>
+      <div :title="`Submitting duration is ${store.config.SUBMIT_TIMEOUT_SECONDS} seconds`">Submit time</div>
       <BProgress :value="submitTimeoutProgressRatio" :variant="submitTimeoutVariant" :animated="true" striped/>
     </div>
-  </div>
-
-  <div :v-model="modalGenericMessage">
-    <ModalGenericMessage :modalGenericMessage="modalGenericMessage" @trigger-updated="updateGenericModalMessage($event)"/>
   </div>
 
 </template>
 
 <script setup>
-import { ref, computed, onBeforeMount, onUnmounted, watch } from "vue";
-import { sendPenalty } from "~/assets/webAppAPI.js";
+import { ref, computed, onUnmounted, watch } from "vue";
+import { useGameStore } from "~/stores/game.js";
 import { GameStates, PlayerStates } from "~/assets/states.js";
 
 // ##################
 // #####  VARS  #####
 // ##################
 
-const props = defineProps({
-  gameAuth: { type: Object, required: true },
-  gameState: { type: String, required: true },
-  playerState: { type: String, required: true },
-  playersStats: { type: Array, required: false, default() { return [] } },
-  penalisedPlayer: { type: String, required: false, default() { return '' }},
-});
+const store = useGameStore();
 
-const emit = defineEmits(['update-player-state', 'update-game-state']);
-
-const config = ref(await useConfig());
-
-const modalGenericMessage = ref({triggerModal: false, modalTitle: '', modalMessage: ''});
-
-// Timer shenanigans
+// Timer shenanigans -- purely presentational, so these stay local rather than moving to the
+// store: nothing outside this component's own template needs to read them.
 const submitSetTimeout = ref();
 const submitIntervalId = ref(null);
-const submitTimeoutProgress = ref(config.value.SUBMIT_TIMEOUT_SECONDS);
-const submitTimeoutProgressRatio = computed (() => {return (submitTimeoutProgress.value*100)/config.value.SUBMIT_TIMEOUT_SECONDS});
+const submitTimeoutProgress = ref(store.config.SUBMIT_TIMEOUT_SECONDS);
+const submitTimeoutProgressRatio = computed (() => {return (submitTimeoutProgress.value*100)/store.config.SUBMIT_TIMEOUT_SECONDS});
 const submitTimeoutVariant = computed(() => {
   if (0 <= submitTimeoutProgressRatio.value && submitTimeoutProgressRatio.value < 33) {
     return "danger";
@@ -60,16 +45,16 @@ const submitTimeoutVariant = computed(() => {
   }
 });
 
-const variantsPenaltyProgress = computed(() => { return props.playersStats.map(player => player.color) });
-const playersTimerPenaltyProgress = ref(Array.from({length: config.value.MAX_PLAYERS}, (_, __) => 0));
-const penaltyIntervalIds = ref(Array.from({length: config.value.MAX_PLAYERS}, (_, __) => null));
+const variantsPenaltyProgress = computed(() => { return store.playersStats.map(player => player.color) });
+const playersTimerPenaltyProgress = ref(Array.from({length: store.config.MAX_PLAYERS}, (_, __) => 0));
+const penaltyIntervalIds = ref(Array.from({length: store.config.MAX_PLAYERS}, (_, __) => null));
 const playersBarPenaltyProgress = computed(() => {
   const pbpp = [];
 
-  if (props.playersStats.length != 0) {
-    props.playersStats.forEach(function (_, index) {
-      const playerRatioBarSection = 100 / props.playersStats.length;
-      const maxTimerRatio = playersTimerPenaltyProgress.value[index] / config.value.PENALTY_TIMEOUT_SECONDS;
+  if (store.playersStats.length != 0) {
+    store.playersStats.forEach(function (_, index) {
+      const playerRatioBarSection = 100 / store.playersStats.length;
+      const maxTimerRatio = playersTimerPenaltyProgress.value[index] / store.config.PENALTY_TIMEOUT_SECONDS;
       pbpp.push(playerRatioBarSection * maxTimerRatio);
     });
   }
@@ -79,8 +64,6 @@ const playersBarPenaltyProgress = computed(() => {
 // ##################
 // #####  NUXT  #####
 // ##################
-
-onBeforeMount(() => { });
 
 onUnmounted(() => {
   clearTimeout(submitSetTimeout.value);
@@ -94,7 +77,7 @@ onUnmounted(() => {
 
 // https://stackoverflow.com/questions/59125857/how-to-watch-props-change-with-vue-composition-api-vue-3
 watch(
-  () => props.playerState, async (newValue, oldValue) => {
+  () => store.playerState, async (newValue, oldValue) => {
     if (newValue == PlayerStates.SUBMITTING.name) {
       proceedWithSelectedPlayer()
     }
@@ -105,23 +88,23 @@ watch(
 );
 
 watch(
-  () => props.penalisedPlayer, async (newValue, oldValue) => {
+  () => store.penalisedPlayer, async (newValue, oldValue) => {
     if (newValue != '') {
-      sendPlayerPenalty();
-      emit('update-player-state', { status: true,
-                                    playerState: PlayerStates.IGNORE.name,
-                                    data: {action: 'player-penalty'} });
+      const playerName = newValue;
+      store.penalisedPlayer = ''; // one-shot signal: clear immediately so a future penalty re-triggers
+
+      const resp = await store.requestPenalty(playerName);
+      if (resp.status) {
+        playersTimerPenaltyProgress.value[resp.playerIndex] = store.config.PENALTY_TIMEOUT_SECONDS;
+        updatePlayerPenaltyProgressBar(resp.playerIndex);
+      }
     }
   }
 );
 
 // ###################
-// #####   GUI   #####
+// #####  FUNCS  #####
 // ###################
-
-const updateGenericModalMessage = (ev) => {
-  modalGenericMessage.value = ev;
-};
 
 const updateSubmitProgressBar = () => {
   const timer = 500;
@@ -131,16 +114,14 @@ const updateSubmitProgressBar = () => {
   }
 
   submitIntervalId.value = setInterval(() => {
-    if (props.playerState != PlayerStates.SUBMITTING.name) {
+    if (store.playerState != PlayerStates.SUBMITTING.name) {
      clearInterval(submitIntervalId.value);
      submitIntervalId.value = null;
-     submitTimeoutProgress.value = config.value.SUBMIT_TIMEOUT_SECONDS;
-     return { status: true };
+     submitTimeoutProgress.value = store.config.SUBMIT_TIMEOUT_SECONDS;
+     return;
     }
 
     submitTimeoutProgress.value  = submitTimeoutProgress.value - (timer/1000);
-
-    return { status: true };
   }, timer);
 };
 
@@ -155,90 +136,32 @@ const updatePlayerPenaltyProgressBar = (playerIndex) => {
     if (playersTimerPenaltyProgress.value[playerIndex] == 0) {
      clearInterval(penaltyIntervalIds.value[playerIndex]);
      penaltyIntervalIds.value[playerIndex] = null;
-     return { status: true };
+     return;
     }
 
-    if(props.gameState == GameStates.RUNNING.name){
+    if(store.gameState == GameStates.RUNNING.name){
       playersTimerPenaltyProgress.value[playerIndex]  = playersTimerPenaltyProgress.value[playerIndex] - (timer/1000);
     }
 
-    if(props.gameState == GameStates.NEW.name){
+    if(store.gameState == GameStates.NEW.name){
       playersTimerPenaltyProgress.value[playerIndex] = 0;
     }
-
-    return { status: true };
   }, timer);
 };
-
-// ###################
-// #####  FUNCS  #####
-// ###################
 
 const proceedWithSelectedPlayer = () => {
   prepareForPlayerPenalty();
   updateSubmitProgressBar();
-
-  return { status: true };
 };
 
 const prepareForPlayerPenalty = () => {
   clearTimeout(submitSetTimeout.value);
 
   submitSetTimeout.value = setTimeout(() => {
-    emit('update-player-state', { status: true,
-                                  playerState: PlayerStates.IGNORE.name,
-                                  data: {action: 'player-penalty-request'} });
-
+    store.penalisedPlayer = store.selectedPlayer;
     clearTimeout(submitSetTimeout.value);
-
-    return { status: true };
-  }, (config.value.SUBMIT_TIMEOUT_SECONDS * 1000));
+  }, (store.config.SUBMIT_TIMEOUT_SECONDS * 1000));
 }
-
-// ###################
-// ###  WebAppAPI  ###
-// ###################
-
-const sendPlayerPenalty = async () => {
-  const penalisedPlayer = JSON.parse(JSON.stringify({name: props.penalisedPlayer}));
-
-  let playerIndex = 0;
-  function findPlayerByName(player, index) {
-    playerIndex = index;
-    return player.name == penalisedPlayer.name;
-  }
-
-  const player = props.playersStats.filter(findPlayerByName);
-  if (player.length == 0) {
-    modalGenericMessage.value.modalMessage = `Player ${penalisedPlayer.name} not found`;
-    modalGenericMessage.value.modalTitle = 'Not found';
-    modalGenericMessage.value.triggerModal = true;
-
-    return { status: false };
-  }
-
-  emit('update-game-state', { status: true,
-                              gameState: GameStates.IGNORE.name,
-                              data: {action: 'untoggle-request'} });
-
-  const resp = await sendPenalty(modalGenericMessage, { ...props.gameAuth, playerName: penalisedPlayer.name });
-  if (!resp.status) {
-    return { status: resp.status };
-  }
-
-  playersTimerPenaltyProgress.value[playerIndex] = config.value.PENALTY_TIMEOUT_SECONDS;
-  updatePlayerPenaltyProgressBar(playerIndex);
-
-  // TODO: Use a toast here
-  modalGenericMessage.value.modalMessage = `${config.value.PENALTY_TIMEOUT_SECONDS}s penalty applied to ${penalisedPlayer.name}`;
-  modalGenericMessage.value.modalTitle = 'Applying penalty';
-  modalGenericMessage.value.triggerModal = true;
-
-  emit('update-player-state', { status: true,
-                                playerState: PlayerStates.UPDATE.name,
-                                data: {action: ''} });
-  return { status: true };
-};
 </script>
 
 <style scoped>

@@ -3,73 +3,61 @@
   <div class="mt-4 is-flex">
     <BButton :variant="buttonGameStateFlavor.variant" @click="changeGameStateRequest()" :disabled="!canToggleGameState">{{ buttonGameStateFlavor.text }}</BButton>
     <BButton :variant="setCalled ? (canSendSet? 'success' : 'outline-success') : 'info'"
-             @click="setCalled ? sendSelection(selectedPlayer) : selectSubmittingPlayer()"
+             @click="setCalled ? sendSelection(store.selectedPlayer) : selectSubmittingPlayer()"
              :disabled="setCalled ? !canSendSet : !canCallSet">{{ setCalled ? 'Submit SET' : 'SET!' }}</BButton>
     <BButton variant="outline-primary"
              @click="getRandomHint()"
              :disabled="disableHint">HINT</BButton>
   </div>
 
-  <p v-if="props.playersStats.length == 0" style="color: red; font-size: 0.63rem; margin-bottom: 0px; margin-top: 0px">Add at least one player to start</p>
+  <p v-if="store.playersStats.length == 0" style="color: red; font-size: 0.63rem; margin-bottom: 0px; margin-top: 0px">Add at least one player to start</p>
 
   <b-modal v-model="modalSelectPlayer.do" :title="modalSelectPlayer.modalTitle" no-close-on-backdrop no-close-on-esc no-footer>
     <div class="is-flex">
-      <BButton pill v-for="player in humanPlayers" :key="player.name" @click="proceedWithSelectedPlayer(player.name)">
+      <BButton pill v-for="player in humanPlayers" :key="player.name" @click="onPlayerPicked(player.name)">
         {{ player.name }}
       </BButton>
     </div>
   </b-modal>
 
-  <ModalGenericMessage :modalGenericMessage="modalGenericMessage" @trigger-updated="updateGenericModalMessage($event)"/>
-
 </template>
 
 <script setup>
-import { ref, computed, onBeforeMount, watch } from "vue";
-import { changeGameState, submitSet, getHints } from "~/assets/webAppAPI.js";
+import { ref, computed, watch } from "vue";
+import { useGameStore } from "~/stores/game.js";
 import { GameStates, PlayerStates } from "~/assets/states.js";
 
 // ##################
 // #####  VARS  #####
 // ##################
 
-const props = defineProps({
-  gameAuth: { type: Object, required: true },
-  gameState: { type: String, required: true },
-  playerState: { type: String, required: true },
-  playersStats: { type: Array, required: false, default() { return [] } },
-  selectedCards: { type: Array, required: false, default() { return [] } },
-  validAmountSelectedCards: { type: Number, required: false, default() { return 3 } },
-});
+const store = useGameStore();
 
-const emit = defineEmits(['update-player-state', 'update-game-state']);
-
-const modalGenericMessage = ref({triggerModal: false, modalTitle: '', modalMessage: ''});
 const modalSelectPlayer = ref({ do: false, modalTitle: 'Select player', modalMessage: '' });
 
 // Control variables
-const canToggleGameState = computed(() => (props.playerState == PlayerStates.IDLE.name &&
-                                           (props.gameState == GameStates.NEW.name ||
-                                            props.gameState == GameStates.RUNNING.name ||
-                                            props.gameState == GameStates.PAUSED.name) &&
-                                           props.playersStats.length != 0));
-const disableHint = computed(() => (props.gameState != GameStates.RUNNING.name ||
-                                    props.playerState == PlayerStates.SUBMITTING.name ||
-                                    props.playerState == PlayerStates.LOCKED.name))
-const canCallSet = computed(() => (props.playerState == PlayerStates.IDLE.name &&
-                                   props.gameState == GameStates.RUNNING.name &&
-                                   props.playersStats.length != 0));
-const canSendSet = computed(() => (props.playerState == PlayerStates.SUBMITTING.name &&
-                                   props.gameState == GameStates.RUNNING.name &&
-                                   props.playersStats.length != 0 &&
-                                   props.selectedCards.length == props.validAmountSelectedCards));
+const canToggleGameState = computed(() => (store.playerState == PlayerStates.IDLE.name &&
+                                           (store.gameState == GameStates.NEW.name ||
+                                            store.gameState == GameStates.RUNNING.name ||
+                                            store.gameState == GameStates.PAUSED.name) &&
+                                           store.playersStats.length != 0));
+const disableHint = computed(() => (store.gameState != GameStates.RUNNING.name ||
+                                    store.playerState == PlayerStates.SUBMITTING.name ||
+                                    store.playerState == PlayerStates.LOCKED.name))
+const canCallSet = computed(() => (store.playerState == PlayerStates.IDLE.name &&
+                                   store.gameState == GameStates.RUNNING.name &&
+                                   store.playersStats.length != 0));
+const canSendSet = computed(() => (store.playerState == PlayerStates.SUBMITTING.name &&
+                                   store.gameState == GameStates.RUNNING.name &&
+                                   store.playersStats.length != 0 &&
+                                   store.selectedCards.length == store.validAmountSelectedCards));
 
 const setCalled = ref(false);
 
 // Start - Pause button cosmetic changes
 const buttonGameStateFlavor = computed(() => {
   const flavor = {variant: 'secondary', text: 'LOCKED'};
-  switch(props.gameState) {
+  switch(store.gameState) {
     case GameStates.RUNNING.name:
       flavor.variant = 'warning'; flavor.text = 'PAUSE';
       break;
@@ -87,21 +75,13 @@ const buttonGameStateFlavor = computed(() => {
 
 // Player list informations (Human / AI) for some automation
 const isAI = (value) => value.is_ai;
-const onlyAIPlayers = computed(() => (props.playersStats.every(isAI)));
-const aiPlayers = computed(() => props.playersStats.filter(playersStats => playersStats.is_ai));
-const humanPlayers = computed(() => props.playersStats.filter(playersStats => !playersStats.is_ai));
-
-const selectedPlayer = ref('');
-
-// ##################
-// #####  NUXT  #####
-// ##################
-
-onBeforeMount(() => { });
+const onlyAIPlayers = computed(() => (store.playersStats.every(isAI)));
+const aiPlayers = computed(() => store.playersStats.filter(playersStats => playersStats.is_ai));
+const humanPlayers = computed(() => store.playersStats.filter(playersStats => !playersStats.is_ai));
 
 // https://stackoverflow.com/questions/59125857/how-to-watch-props-change-with-vue-composition-api-vue-3
 watch(
-  () => props.playerState, async (newValue, oldValue) => {
+  () => store.playerState, async (newValue, oldValue) => {
     if (newValue != PlayerStates.SUBMITTING.name && oldValue == PlayerStates.SUBMITTING.name) {
       setCalled.value = false;
     }
@@ -109,58 +89,36 @@ watch(
 );
 
 // ###################
-// #####   GUI   #####
-// ###################
-
-const updateGenericModalMessage = (ev) => {
-  modalGenericMessage.value = ev;
-};
-
-// ###################
 // #####  FUNCS  #####
 // ###################
 
 const selectSubmittingPlayer = async () => {
-  emit('update-game-state', { status: true,
-                              gameState: GameStates.IGNORE.name,
-                              data: {action: 'untoggle-request'} });
+  store.untoggleAllCards();
 
   if (humanPlayers.value.length == 1) {
-    const respSelectedPlayer = proceedWithSelectedPlayer(humanPlayers.value[0].name);
-    return { status: respSelectedPlayer.status };
+    await onPlayerPicked(humanPlayers.value[0].name);
+    return;
   }
 
-  if(props.gameState == GameStates.RUNNING.name) {
-    const respGameState = await changeGameStateRequest();
-    if (!respGameState.status) {
-      return { status: respGameState.status };
+  if (store.gameState == GameStates.RUNNING.name) {
+    const resp = await store.startOrPauseGame();
+    if (!resp.status) {
+      return;
     }
   }
 
   modalSelectPlayer.value.do = true;
-
-  return { status: true };
 };
 
-const proceedWithSelectedPlayer = async (playerName) => {
+const onPlayerPicked = async (playerName) => {
   modalSelectPlayer.value.do = false;
 
-  if(props.gameState == GameStates.PAUSED.name) {
-    const respGameState = await changeGameStateRequest();
-    if (!respGameState.status) {
-      selectedPlayer.value = '';
-      return { status: respGameState.status };
-    }
+  const resp = await store.proceedWithSelectedPlayer(playerName);
+  if (!resp.status) {
+    return;
   }
 
-  selectedPlayer.value = playerName;
   setCalled.value = true;
-
-  emit('update-player-state', { status: true,
-                                playerState: PlayerStates.SUBMITTING.name,
-                                data: {action: '', playerName: playerName} });
-
-  return { status: true };
 };
 
 // ###################
@@ -168,67 +126,17 @@ const proceedWithSelectedPlayer = async (playerName) => {
 // ###################
 
 const changeGameStateRequest = async () => {
-  const enablePause = props.gameState == GameStates.RUNNING.name;
-  const respGameState = await changeGameState(modalGenericMessage, { ...props.gameAuth, enablePause: enablePause });
-  if (!respGameState.status) {
-    selectedPlayer.value = '';
-    return { status: respGameState.status };
-  }
-
-  emit('update-game-state', { status: true,
-                              gameState: GameStates[respGameState.content.game_state].name,
-                              data: {action: ''} });
-
-  return { status: true };
+  await store.startOrPauseGame();
 };
 
 const getRandomHint = async () => {
-  const resp = await getHints(modalGenericMessage, { ...props.gameAuth });
-  if (!resp.status) {
-    return { status: resp.status };
-  }
-
-  const random = Math.floor(Math.random() * resp.content.sets.length);
-  emit('update-game-state', { status: resp.status,
-                              gameState: GameStates.IGNORE.name,
-                              data: {action: 'hint', hintedCards: resp.content.sets[random]} });
-
-  return { status: true };
+  await store.requestHint();
 };
 
 const sendSelection = async (playerName) => {
-  emit('update-game-state', { status: true,
-                              gameState: GameStates.IGNORE.name,
-                              data: {action: 'untoggle-request'} });
-
-  const respSubmit = await submitSet(modalGenericMessage, { ...props.gameAuth, playerName: playerName, set: props.selectedCards });
+  await store.submitSet(playerName, store.selectedCards);
 
   setCalled.value = false;
-  selectedPlayer.value = '';
-
-  if (!respSubmit.status){
-    if (respSubmit.content.error == 'CARDS_NOT_FOUND') {
-      emit('update-game-state', { status: true,
-                                  gameState: GameStates.UPDATE.name,
-                                  data: {action: ''} });
-    }
-
-    emit('update-player-state', { status: true,
-                                  playerState: PlayerStates.UPDATE.name,
-                                  data: {action: ''} });
-
-    return { status: respSubmit.status };
-  }
-
-  emit('update-game-state', { status: true,
-                              gameState: GameStates.UPDATE.name,
-                              data: {action: ''} });
-
-  emit('update-player-state', { status: true,
-                                playerState: PlayerStates.UPDATE.name,
-                                data: {action: respSubmit.content.is_valid ? '' : 'player-penalty-request'} });
-
-  return { status: true };
 };
 </script>
 

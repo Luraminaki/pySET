@@ -19,46 +19,34 @@
     </div>
   </b-modal>
 
-  <ModalGenericMessage :modalGenericMessage="modalGenericMessage" @trigger-updated="updateGenericModalMessage($event)"/>
-
 </template>
 
 <script setup>
-import { ref, computed, onBeforeMount, watch } from "vue";
+import { ref, computed, watch } from "vue";
 import { sleep } from "~/assets/helpers.js";
-import { addPlayer } from "~/assets/webAppAPI.js";
+import { useGameStore } from "~/stores/game.js";
 import { GameStates, PlayerStates } from "~/assets/states.js";
 
 // ##################
 // #####  VARS  #####
 // ##################
 
-const props = defineProps({
-  gameAuth: { type: Object, required: true },
-  gameState: { type: String, required: true },
-  playerState: { type: String, required: true },
-  playersStats: { type: Array, required: false, default() { return [] } },
-});
+const store = useGameStore();
 
-const emit = defineEmits(['update-player-state']);
-
-const config = ref(await useConfig());
-
-const modalGenericMessage = ref({triggerModal: false, modalTitle: '', modalMessage: ''});
 const modalPlayerUpdate = ref({ do: false, modalTitle: '', modalMessage: '', action: '', player: { name: '' } });
 
-const disableAdd = computed(() => (props.playersStats.length == config.value.MAX_PLAYERS ||
-                                   props.gameState != GameStates.NEW.name ||
-                                   props.playerState == PlayerStates.LOCKED.name));
+const disableAdd = computed(() => (store.playersStats.length == store.config.MAX_PLAYERS ||
+                                   store.gameState != GameStates.NEW.name ||
+                                   store.playerState == PlayerStates.LOCKED.name));
 
 const playerColor = ref('#000000');
-const uniquePlayerColor = computed(() => (props.playersStats.filter(findPlayerByColor).length == 0));
+const uniquePlayerColor = computed(() => (store.playersStats.filter(findPlayerByColor).length == 0));
 const validPlayerColor = computed(() => (playerColor.value != ''));
 
 const minNameLength = ref(3);
 const playerName = ref('');
-const uniquePlayerName = computed(() => (props.playersStats.filter(findPlayerByName).length == 0));
-const validPlayerName = computed(() => (playerName.value.length >= minNameLength.value && playerName.value.length <= config.value.PLAYER_NAME_MAX_CHARS));
+const uniquePlayerName = computed(() => (store.playersStats.filter(findPlayerByName).length == 0));
+const validPlayerName = computed(() => (playerName.value.length >= minNameLength.value && playerName.value.length <= store.config.PLAYER_NAME_MAX_CHARS));
 
 const validPlayer = computed(() => (validPlayerName.value && uniquePlayerName.value &&
                                     validPlayerColor.value && uniquePlayerColor.value))
@@ -70,12 +58,6 @@ function findPlayerByName(player, index) {
 function findPlayerByColor(player, index) {
   return player.color == playerColor.value;
 }
-
-// ##################
-// #####  NUXT  #####
-// ##################
-
-onBeforeMount(() => { });
 
 // https://stackoverflow.com/questions/59125857/how-to-watch-props-change-with-vue-composition-api-vue-3
 watch(
@@ -92,12 +74,8 @@ watch(
 );
 
 // ###################
-// #####   GUI   #####
+// #####  FUNCS  #####
 // ###################
-
-const updateGenericModalMessage = (ev) => {
-  modalGenericMessage.value = ev;
-};
 
 const resetValues = () => {
   playerName.value = '';
@@ -108,10 +86,6 @@ const resetValues = () => {
   modalPlayerUpdate.value.action = '';
   modalPlayerUpdate.value.player.name = '';
 };
-
-// ###################
-// #####  FUNCS  #####
-// ###################
 
 const prepareAdd = () => {
   modalPlayerUpdate.value.action = 'add';
@@ -127,21 +101,11 @@ const prepareAdd = () => {
 const updatePlayersStats = async () => {
   modalPlayerUpdate.value.do = false;
 
-  let resp = { status: false };
-
-  resp = await addPlayer(modalGenericMessage, { ...props.gameAuth, name: playerName.value, color: playerColor.value });
+  const resp = await store.addPlayer(playerName.value, playerColor.value);
 
   resetValues();
 
-  if (!resp.status) {
-    return { status: resp.status };
-  }
-
-  emit('update-player-state', { status: resp.status,
-                                playerState: PlayerStates.UPDATE.name,
-                                data: {action: ''} } );
-
-  return { status: true };
+  return resp;
 };
 </script>
 

@@ -11,7 +11,8 @@
 </template>
 
 <script setup>
-import { ref, onBeforeMount, watch } from "vue";
+import { ref, computed, watch } from "vue";
+import { useGameStore } from "~/stores/game.js";
 
 // ##################
 // #####  VARS  #####
@@ -19,26 +20,20 @@ import { ref, onBeforeMount, watch } from "vue";
 
 const props = defineProps({
   card: { type: Number, required: true },
-  cardsEvent: { type: Object, required: false, default() { return { cards: [], event: '' } } },
-  preventToggle: { type: Boolean, required: false, default() { return false } }
 });
 
-const emit = defineEmits(['card-toggled']);
+const store = useGameStore();
 
 const cardIsSelected = ref(false);
 const cardClass = ref('card border-secondary');
 
-// ##################
-// #####  NUXT  #####
-// ##################
-
-onBeforeMount(() => { });
+const preventToggle = computed(() => (store.selectedCards.length == store.validAmountSelectedCards));
 
 // https://stackoverflow.com/questions/59125857/how-to-watch-props-change-with-vue-composition-api-vue-3
 watch(
-  () => props.cardsEvent.event, async (newValue, oldValue) => {
+  () => store.cardsEvent.event, async (newValue, oldValue) => {
     if (newValue == 'hint') {
-      if (props.cardsEvent.cards.includes(props.card)) {
+      if (store.cardsEvent.cards.includes(props.card)) {
         cardIsSelected.value = false;
         await toggleCard("card border-warning");
       }
@@ -59,21 +54,19 @@ const toggleCard = async (toggleType) => {
     cardClass.value = "card border-secondary";
     cardIsSelected.value = false;
 
-    emit('card-toggled', { status: true, action: 'remove', card: props.card });
+    store.toggleCard(props.card, 'remove');
 
-    return { status: true };
+    return;
   }
 
-  if (props.preventToggle) {
-    return { status: true };
+  if (preventToggle.value) {
+    return;
   }
 
   cardClass.value = toggleType;
   cardIsSelected.value = true;
 
-  emit('card-toggled', { status: true, action: 'add', card: props.card });
-
-  return { status: true };
+  store.toggleCard(props.card, 'add');
 };
 </script>
 

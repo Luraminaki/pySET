@@ -32,56 +32,35 @@
     <About/>
   </b-modal>
 
-  <ModalGenericMessage :modalGenericMessage="modalGenericMessage" @trigger-updated="updateGenericModalMessage($event)"/>
-
 </template>
 
 <script setup>
-import { ref, computed, onBeforeMount } from "vue";
-import { resetGame } from "~/assets/webAppAPI.js";
+import { ref, computed } from "vue";
+import { useGameStore } from "~/stores/game.js";
 import { GameStates, PlayerStates } from "~/assets/states.js";
 
 // ##################
 // #####  VARS  #####
 // ##################
 
-const props = defineProps({
-  gameAuth: { type: Object, required: true },
-  gameState: { type: String, required: true },
-  playerState: { type: String, required: true },
-});
+const store = useGameStore();
 
-const emit = defineEmits(['update-player-state', 'update-game-state']);
-
-const modalGenericMessage = ref({triggerModal: false, modalTitle: '', modalMessage: ''});
 const modalReset = ref({ do: false, modalTitle: 'Reset game?', modalMessage: '' });
 const modalAbout = ref({ do: false, modalTitle: 'About SET!', modalMessage: '' });
 
-const disableReset = computed(() => (props.gameState == GameStates.NEW.name ||
-                                     props.playerState == PlayerStates.LOCKED.name))
-
-// ##################
-// #####  NUXT  #####
-// ##################
-
-onBeforeMount(() => { });
+const disableReset = computed(() => (store.gameState == GameStates.NEW.name ||
+                                     store.playerState == PlayerStates.LOCKED.name))
 
 // ###################
 // #####   GUI   #####
 // ###################
 
-const updateGenericModalMessage = (ev) => {
-  modalGenericMessage.value = ev;
-};
-
 const askReset = () => {
   modalReset.value.do = true;
-  return { status: true };
 };
 
 const resetValues = () => {
   modalReset.value.do = false;
-  return { status: true };
 };
 
 // ###################
@@ -90,27 +69,17 @@ const resetValues = () => {
 
 const getHelp = async () => {
   modalAbout.value.do = true;
-  return { status: true };
 };
 
 const reset = async (hardReset) => {
   modalReset.value.do = false;
 
-  const resp = await resetGame(modalGenericMessage, { ...props.gameAuth, hard: hardReset });
+  const resp = await store.resetGame(hardReset);
   if (!resp.status) {
-    return { status: resp.status };
+    return;
   }
 
   resetValues();
-
-  emit('update-game-state', { status: resp.status,
-                              gameState: GameStates.RESET.name,
-                              data: {action: ''} });
-  emit('update-player-state', { status: resp.status,
-                                playerState: PlayerStates.UPDATE.name,
-                                data: {action: ''} })
-
-  return { status: true };
 };
 </script>
 

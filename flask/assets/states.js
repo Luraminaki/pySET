@@ -24,12 +24,3 @@ export class PlayerStates {
     this.name = name;
   }
 };
-
-export class TypeStates {
-  static GAME = new TypeStates("GAME");
-  static PLAYER = new TypeStates("PLAYER");
-
-  constructor(name) {
-    this.name = name;
-  }
-};

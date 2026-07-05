@@ -1,7 +1,7 @@
 <template>
 
   <b-accordion>
-    <b-accordion-item v-for="playersStat in props.playersStats" :key="playersStat.name" :title="playersStat.name">
+    <b-accordion-item v-for="playersStat in store.playersStats" :key="playersStat.name" :title="playersStat.name">
       <li>
         <p>Player Color: <BButton :style="`background-color: ${playersStat.color}`"></BButton></p>
       </li>
@@ -33,8 +33,6 @@
     </b-accordion-item>
   </b-accordion>
 
-  <ModalGenericMessage :modalGenericMessage="modalGenericMessage" @trigger-updated="updateGenericModalMessage($event)"/>
-
   <b-modal v-model="modalPlayerUpdate.do"
            :title="modalPlayerUpdate.modalTitle"
            @ok="updatePlayersStats()"
@@ -45,44 +43,26 @@
 </template>
 
 <script setup>
-import { ref, onBeforeMount } from "vue";
-import { removePlayer } from "~/assets/webAppAPI.js";
+import { ref, computed } from "vue";
+import { useGameStore } from "~/stores/game.js";
 import { GameStates, PlayerStates } from "~/assets/states.js";
 
 // ##################
 // #####  VARS  #####
 // ##################
 
-const props = defineProps({
-  gameAuth: { type: Object, required: true },
-  gameState: { type: String, required: true },
-  playerState: { type: String, required: true },
-  playersStats: { type: Array, required: false, default() { return [] } },
-});
+const store = useGameStore();
 
-const emit = defineEmits(['update-player-state']);
-
-const modalGenericMessage = ref({triggerModal: false, modalTitle: '', modalMessage: ''});
 const modalPlayerUpdate = ref({ do: false, modalTitle: '', modalMessage: '', action: '', player: { name: '' } });
 
-const showRemove = computed(() => (props.gameState == GameStates.NEW.name));
-const disableRemove = computed(() => (props.playersStats.length == 0 ||
-                                      props.gameState != GameStates.NEW.name ||
-                                      props.playerState == PlayerStates.LOCKED.name));
-
-// ##################
-// #####  NUXT  #####
-// ##################
-
-onBeforeMount(() => { });
+const showRemove = computed(() => (store.gameState == GameStates.NEW.name));
+const disableRemove = computed(() => (store.playersStats.length == 0 ||
+                                      store.gameState != GameStates.NEW.name ||
+                                      store.playerState == PlayerStates.LOCKED.name));
 
 // ###################
-// #####   GUI   #####
+// #####  FUNCS  #####
 // ###################
-
-const updateGenericModalMessage = (ev) => {
-  modalGenericMessage.value = ev;
-};
 
 const resetValues = () => {
   modalPlayerUpdate.value.do = false;
@@ -91,10 +71,6 @@ const resetValues = () => {
   modalPlayerUpdate.value.action = '';
   modalPlayerUpdate.value.player.name = '';
 };
-
-// ###################
-// #####  FUNCS  #####
-// ###################
 
 const prepareRemove = (playerName) => {
   modalPlayerUpdate.value.action = 'remove';
@@ -111,18 +87,10 @@ const prepareRemove = (playerName) => {
 const updatePlayersStats = async () => {
   modalPlayerUpdate.value.do = false;
 
-  const resp = await removePlayer(modalGenericMessage, { ...props.gameAuth, name: modalPlayerUpdate.value.player.name });
+  const resp = await store.removePlayer(modalPlayerUpdate.value.player.name);
 
   resetValues();
 
-  if (!resp.status) {
-    return { status: resp.status };
-  }
-
-  emit('update-player-state', { status: resp.status,
-                                playerState: PlayerStates.UPDATE.name,
-                                data: {action: ''} } );
-
-  return { status: true };
+  return resp;
 };
 </script>
