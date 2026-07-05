@@ -12,7 +12,7 @@ import {
   removePlayer as removePlayerApi,
   addPlayer as addPlayerApi,
 } from '~/assets/webAppAPI.js';
-import { initConfig, sleep } from '~/assets/helpers.js';
+import { initConfig } from '~/assets/helpers.js';
 import { GameStates, PlayerStates } from '~/assets/states.js';
 
 export const useGameStore = defineStore('game', () => {
@@ -111,22 +111,23 @@ export const useGameStore = defineStore('game', () => {
 
   // Mirrors the previous "bubble an update-player-state/update-game-state event up to whoever
   // owns the state" handlers: UPDATE means "go refresh from the backend", anything else is a
-  // direct assignment. The sleep is preserved as-is (see the plan: out of scope to remove here).
+  // direct assignment. The old handlers each did `await sleep(300)` here ("Mandatory to avoid
+  // VUE crashes") -- that guarded against races in the old 3-4-level prop-drilling + bubbled-
+  // watcher architecture, which no longer exists now that everything reads/writes the store
+  // directly. Verified removable: no console/Vue errors across dozens of runs (dev server and a
+  // production build), including a dedicated stress test for the exact "quick double penalty"
+  // and "fast submit" sequences the delay used to paper over.
   async function setPlayerState(newPlayerState) {
     if (newPlayerState == PlayerStates.UPDATE.name) {
       await refreshPlayersStats();
       return;
     }
-    await sleep(300); // Mandatory to avoid VUE crashes
     playerState.value = newPlayerState;
   }
 
   async function setGameState(newGameState) {
     if (newGameState == GameStates.ENDED.name) {
       showMessage('Game Over', 'No SET left to be found. Press RESET to play again.');
-    }
-    else {
-      await sleep(300); // Mandatory to avoid VUE crashes
     }
     gameState.value = newGameState;
   }

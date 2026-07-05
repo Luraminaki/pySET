@@ -17,5 +17,11 @@ npm run generate
 cd ..
 
 rm -f ${DEST}.zip
-zip -qr ${DEST}.zip ./{README.md,INSTALL.md,pyproject.toml,config.json,.env.example,pyset/*,gunicorn/*.py} ./flask/.output/*
+# flask/dist is a symlink to flask/.output/public created by `npm run generate` (see
+# pyset/server_app.py, which serves the app from flask/dist). zip dereferences symlinks by
+# default, so this stores the real files under flask/dist/... in the archive -- matching what
+# server_app.py expects -- rather than an absolute, machine-specific symlink that would be
+# broken on any other machine, or flask/.output/server, which is Nitro's own Node server bundle
+# and isn't used by this Flask+gunicorn deployment.
+zip -qr ${DEST}.zip ./{README.md,INSTALL.md,pyproject.toml,config.json,.env.example,pyset/*,gunicorn/*.py} ./flask/dist/*
 echo "Done !"

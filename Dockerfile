@@ -11,7 +11,9 @@ RUN npm run generate
 FROM python:3.12-bullseye
 ENV PYTHONUNBUFFERED 1
 
-COPY --from=buildfront ./flask/.output /flask/.output/
+# server_app.py serves the app from flask/dist (see pyset/server_app.py); copy .output/public's
+# real contents straight into it rather than .output/server (Nitro's unused Node server bundle).
+COPY --from=buildfront ./flask/.output/public /flask/dist/
 COPY ./gunicorn /gunicorn/
 COPY ./pyset /pyset/
 COPY config.json ./

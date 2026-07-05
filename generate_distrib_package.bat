@@ -24,6 +24,13 @@ call npm install
 call npm run generate
 cd ..
 
+REM `npm run generate` leaves flask\dist as a symlink/junction to flask\.output\public (see
+REM pyset/server_app.py, which serves the app from flask\dist). 7-Zip's handling of NTFS
+REM reparse points is unreliable, and the link itself is a machine-specific absolute path, so
+REM re-materialize it as a real directory before zipping rather than trusting 7z to follow it.
+IF EXIST "flask\dist" rmdir "flask\dist"
+robocopy "flask\.output\public" "flask\dist" /E >nul
+
 DEL %DEST%
 call cmd /C ""%7ZEXEC%" a -tzip %DEST% "README.md""
 call cmd /C ""%7ZEXEC%" a -tzip %DEST% "INSTALL.md""
@@ -32,6 +39,6 @@ call cmd /C ""%7ZEXEC%" a -tzip %DEST% "config.json""
 call cmd /C ""%7ZEXEC%" a -tzip %DEST% ".env.example""
 call cmd /C ""%7ZEXEC%" a -tzip %DEST% "pyset/*""
 call cmd /C ""%7ZEXEC%" a -tzip %DEST% "gunicorn/*.py""
-call cmd /C ""%7ZEXEC%" a -tzip %DEST% "flask/.output/*""
+call cmd /C ""%7ZEXEC%" a -tzip %DEST% "flask/dist/*""
 
 echo Done !
