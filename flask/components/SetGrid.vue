@@ -53,7 +53,7 @@
 <script setup>
 import { ref, computed, onBeforeMount, onMounted, watch } from "vue";
 import { getGame } from "~/assets/webAppAPI.js";
-import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
+import { GameStates, PlayerStates } from "~/assets/states.js";
 
 // ##################
 // #####  VARS  #####
@@ -67,8 +67,6 @@ const props = defineProps({
   selectedPlayer: { type: String, required: true },
   hintedCards: { type: Array, required: false, default() { return [] } },
 });
-
-const componentName = 'SetGrid';
 
 const emit = defineEmits(['update-player-state', 'update-game-state']);
 
@@ -113,9 +111,6 @@ watch(
     else if (newValue == GameStates.UPDATE.name) {
       await loadGame(false);
     }
-    else {
-      console.log(`${componentName} -- ${TypeStates.GAME.name} ${newValue} not handled`);
-    }
   }
 );
 
@@ -134,7 +129,7 @@ watch(
       cardsEvent.value.event = 'hint';
       hintsRequested.value = hintsRequested.value + 1
     }
-  }, {deep: true}
+  }
 );
 
 // ###################
@@ -165,9 +160,6 @@ const cardHandler = async (ev) => {
       resp.status = true;
     }
   }
-  else {
-    console.log(`${componentName} -- Card Action ${ev.action} not handled`);
-  }
 
   if (cardsEvent.value.event == 'untoggle-request') {
     resetToggleCounter.value = resetToggleCounter.value + 1;
@@ -197,14 +189,7 @@ const updatePlayerStateHandler = (ev) => {
     return { status: true };
   }
 
-  const from = [...ev.from];
-  from.push(componentName);
-
-  emit('update-player-state', { status: ev.status,
-                                typeState: ev.typeState,
-                                playerState: ev.playerState,
-                                data: ev.data,
-                                from: from });
+  emit('update-player-state', ev);
 
   return { status: true };
 };
@@ -215,13 +200,7 @@ const updateGameStateHandler = (ev) => {
     return { status: true };
   }
 
-  const from = [...ev.from];
-  from.push(componentName);
-  emit('update-game-state', { status: ev.status,
-                              typeState: ev.typeState,
-                              gameState: ev.gameState,
-                              data: ev.data,
-                              from: from });
+  emit('update-game-state', ev);
 
   return { status: true };
 };
@@ -246,10 +225,8 @@ const loadGame = async (reload=false) => {
   const resp = await getGame(modalGenericMessage, { ...props.gameAuth });
   if (!resp.status) {
     emit('update-game-state', { status: true,
-                                  typeState: TypeStates.GAME.name,
                                   gameState: GameStates.UNDEFINED.name,
-                                  data: {action: ''},
-                                  from: [componentName] });
+                                  data: {action: ''} });
     return { status: resp.status };
   }
 
@@ -257,10 +234,8 @@ const loadGame = async (reload=false) => {
   drawPile.value = resp.content.draw_pile;
 
   emit('update-game-state', { status: resp.status,
-                              typeState: TypeStates.GAME.name,
                               gameState: GameStates[resp.content.game_state].name,
-                              data: {action: ''},
-                              from: [componentName] });
+                              data: {action: ''} });
 
   return { status: true };
 };

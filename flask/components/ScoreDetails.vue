@@ -27,8 +27,6 @@ const props = defineProps({
   playersStat: { type: Object, required: false, default() { return {} } },
 });
 
-const componentName = 'ScoreDetails';
-
 const showDetails = ref(false);
 
 // ##################

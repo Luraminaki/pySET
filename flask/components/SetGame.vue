@@ -55,8 +55,6 @@ const props = defineProps({
   playersStats: { type: Array, required: false, default() { return [] } },
 });
 
-const componentName = 'SetGame';
-
 const emit = defineEmits(['update-player-state', 'update-game-state']);
 
 const config = ref(await useConfig());
@@ -88,14 +86,7 @@ const updatePlayerStateHandler = (ev) => {
     selectedPlayer.value = ev.data.playerName;
   }
 
-  const from = [...ev.from];
-  from.push(componentName);
-
-  emit('update-player-state', { status: ev.status,
-                                typeState: ev.typeState,
-                                playerState: ev.playerState,
-                                data: ev.data,
-                                from: from });
+  emit('update-player-state', ev);
 
   return { status: true };
 };
@@ -106,13 +97,7 @@ const updateGameStateHandler = (ev) => {
     return { status: true };
   }
 
-  const from = [...ev.from];
-  from.push(componentName);
-  emit('update-game-state', { status: ev.status,
-                              typeState: ev.typeState,
-                              gameState: ev.gameState,
-                              data: ev.data,
-                              from: from });
+  emit('update-game-state', ev);
 
   return { status: true };
 };

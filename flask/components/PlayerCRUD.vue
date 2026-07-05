@@ -27,7 +27,7 @@
 import { ref, computed, onBeforeMount, watch } from "vue";
 import { sleep } from "~/assets/helpers.js";
 import { addPlayer } from "~/assets/webAppAPI.js";
-import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
+import { GameStates, PlayerStates } from "~/assets/states.js";
 
 // ##################
 // #####  VARS  #####
@@ -39,8 +39,6 @@ const props = defineProps({
   playerState: { type: String, required: true },
   playersStats: { type: Array, required: false, default() { return [] } },
 });
-
-const componentName = 'PlayerCRUD';
 
 const emit = defineEmits(['update-player-state']);
 
@@ -140,10 +138,8 @@ const updatePlayersStats = async () => {
   }
 
   emit('update-player-state', { status: resp.status,
-                                typeState: TypeStates.PLAYER.name,
                                 playerState: PlayerStates.UPDATE.name,
-                                data: {action: ''},
-                                from: [componentName] } );
+                                data: {action: ''} } );
 
   return { status: true };
 };

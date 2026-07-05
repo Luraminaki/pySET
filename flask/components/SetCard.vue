@@ -25,8 +25,6 @@ const props = defineProps({
 
 const emit = defineEmits(['card-toggled']);
 
-const componentName = 'SetCard';
-
 const cardIsSelected = ref(false);
 const cardClass = ref('card border-secondary');
 
@@ -49,9 +47,6 @@ watch(
       cardIsSelected.value = true;
       await toggleCard();
     }
-    else {
-      console.log(`${componentName} -- Card Event ${newValue} not handled`);
-    }
   }
 );
 
@@ -64,7 +59,7 @@ const toggleCard = async (toggleType) => {
     cardClass.value = "card border-secondary";
     cardIsSelected.value = false;
 
-    emit('card-toggled', { status: true, action: 'remove', card: props.card, from: [componentName] });
+    emit('card-toggled', { status: true, action: 'remove', card: props.card });
 
     return { status: true };
   }
@@ -76,7 +71,7 @@ const toggleCard = async (toggleType) => {
   cardClass.value = toggleType;
   cardIsSelected.value = true;
 
-  emit('card-toggled', { status: true, action: 'add', card: props.card, from: [componentName] });
+  emit('card-toggled', { status: true, action: 'add', card: props.card });
 
   return { status: true };
 };

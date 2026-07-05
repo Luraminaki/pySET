@@ -57,19 +57,18 @@ export async function attempt(apiRoute, data={}, CRUD='GET') {
     }
 
     else {
-      console.log(`Unkown ${CRUD} request`);
+      console.error(`Unknown ${CRUD} request`);
       return { status: false, content: { status: 'CRUD_ERROR', error: `CRUD ${CRUD} inconnue`} };
     }
 
     if (!(['SUCCESS', 'DONE', 'ONGOING'].includes(resp.status))) {
-      console.log(`Request to ${apiRoute} failed with parameters ${JSON.stringify(data)}: ${resp.error}`);
       return { status: false, content: resp };
     }
 
     return { status: true, content: resp };
 
   } catch (error) {
-    console.log(`Error ${apiRoute} : ${error}`);
+    console.error(`Error ${apiRoute} : ${error}`);
     return { status: false, content: { status: 'SERVER_ERROR', error: `API ${apiRoute} unreachable: ${error}`} };
   }
 }
@@ -77,6 +76,17 @@ export async function attempt(apiRoute, data={}, CRUD='GET') {
 // ####################
 // # CONFIG  FETCHING #
 // ####################
+
+// Used if the initial get_config call fails outright, so every component reading e.g.
+// config.value.SUBMIT_TIMEOUT_SECONDS gets a safe number instead of undefined/NaN.
+const DEFAULT_CONFIG = {
+  MAX_SESSIONS: 5,
+  SESSION_NAME_MAX_CHARS: 36,
+  MAX_PLAYERS: 6,
+  PLAYER_NAME_MAX_CHARS: 12,
+  SUBMIT_TIMEOUT_SECONDS: 10,
+  PENALTY_TIMEOUT_SECONDS: 10,
+};
 
 // https://stackoverflow.com/questions/66190949/how-can-a-buefy-toast-be-made-available-to-all-components-in-a-vue-app
 export async function initConfig() {
@@ -86,7 +96,7 @@ export async function initConfig() {
     return config;
   }
   catch (error) {
-    console.log(`Error initConfig : ${error}`);
-    return { };
+    console.error(`Error initConfig : ${error}`);
+    return { ...DEFAULT_CONFIG };
   }
 }

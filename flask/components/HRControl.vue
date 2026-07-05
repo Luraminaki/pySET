@@ -39,7 +39,7 @@
 <script setup>
 import { ref, computed, onBeforeMount } from "vue";
 import { resetGame } from "~/assets/webAppAPI.js";
-import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
+import { GameStates, PlayerStates } from "~/assets/states.js";
 
 // ##################
 // #####  VARS  #####
@@ -50,8 +50,6 @@ const props = defineProps({
   gameState: { type: String, required: true },
   playerState: { type: String, required: true },
 });
-
-const componentName = 'HRControl';
 
 const emit = defineEmits(['update-player-state', 'update-game-state']);
 
@@ -106,15 +104,11 @@ const reset = async (hardReset) => {
   resetValues();
 
   emit('update-game-state', { status: resp.status,
-                              typeState: TypeStates.GAME.name,
                               gameState: GameStates.RESET.name,
-                              data: {action: ''},
-                              from: [componentName] });
+                              data: {action: ''} });
   emit('update-player-state', { status: resp.status,
-                                typeState: TypeStates.PLAYER.name,
                                 playerState: PlayerStates.UPDATE.name,
-                                data: {action: ''},
-                                from: [componentName] })
+                                data: {action: ''} })
 
   return { status: true };
 };

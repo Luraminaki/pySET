@@ -27,7 +27,7 @@
 <script setup>
 import { ref, computed, onBeforeMount, watch } from "vue";
 import { changeGameState, submitSet, getHints } from "~/assets/webAppAPI.js";
-import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
+import { GameStates, PlayerStates } from "~/assets/states.js";
 
 // ##################
 // #####  VARS  #####
@@ -41,8 +41,6 @@ const props = defineProps({
   selectedCards: { type: Array, required: false, default() { return [] } },
   validAmountSelectedCards: { type: Number, required: false, default() { return 3 } },
 });
-
-const componentName = 'TurnControl';
 
 const emit = defineEmits(['update-player-state', 'update-game-state']);
 
@@ -124,10 +122,8 @@ const updateGenericModalMessage = (ev) => {
 
 const selectSubmittingPlayer = async () => {
   emit('update-game-state', { status: true,
-                              typeState: TypeStates.GAME.name,
                               gameState: GameStates.IGNORE.name,
-                              data: {action: 'untoggle-request'},
-                              from: [componentName] });
+                              data: {action: 'untoggle-request'} });
 
   if (humanPlayers.value.length == 1) {
     const respSelectedPlayer = proceedWithSelectedPlayer(humanPlayers.value[0].name);
@@ -161,10 +157,8 @@ const proceedWithSelectedPlayer = async (playerName) => {
   setCalled.value = true;
 
   emit('update-player-state', { status: true,
-                                typeState: TypeStates.PLAYER.name,
                                 playerState: PlayerStates.SUBMITTING.name,
-                                data: {action: '', playerName: playerName},
-                                from: [componentName] });
+                                data: {action: '', playerName: playerName} });
 
   return { status: true };
 };
@@ -182,10 +176,8 @@ const changeGameStateRequest = async () => {
   }
 
   emit('update-game-state', { status: true,
-                              typeState: TypeStates.GAME.name,
                               gameState: GameStates[respGameState.content.game_state].name,
-                              data: {action: ''},
-                              from: [componentName] });
+                              data: {action: ''} });
 
   return { status: true };
 };
@@ -198,20 +190,16 @@ const getRandomHint = async () => {
 
   const random = Math.floor(Math.random() * resp.content.sets.length);
   emit('update-game-state', { status: resp.status,
-                              typeState: TypeStates.GAME.name,
                               gameState: GameStates.IGNORE.name,
-                              data: {action: 'hint', hintedCards: resp.content.sets[random]},
-                              from: [componentName] });
+                              data: {action: 'hint', hintedCards: resp.content.sets[random]} });
 
   return { status: true };
 };
 
 const sendSelection = async (playerName) => {
   emit('update-game-state', { status: true,
-                              typeState: TypeStates.GAME.name,
                               gameState: GameStates.IGNORE.name,
-                              data: {action: 'untoggle-request'},
-                              from: [componentName] });
+                              data: {action: 'untoggle-request'} });
 
   const respSubmit = await submitSet(modalGenericMessage, { ...props.gameAuth, playerName: playerName, set: props.selectedCards });
 
@@ -221,32 +209,24 @@ const sendSelection = async (playerName) => {
   if (!respSubmit.status){
     if (respSubmit.content.error == 'CARDS_NOT_FOUND') {
       emit('update-game-state', { status: true,
-                                  typeState: TypeStates.GAME.name,
                                   gameState: GameStates.UPDATE.name,
-                                  data: {action: ''},
-                                  from: [componentName] });
+                                  data: {action: ''} });
     }
 
     emit('update-player-state', { status: true,
-                                  typeState: TypeStates.PLAYER.name,
                                   playerState: PlayerStates.UPDATE.name,
-                                  data: {action: ''},
-                                  from: [componentName] });
+                                  data: {action: ''} });
 
     return { status: respSubmit.status };
   }
 
   emit('update-game-state', { status: true,
-                              typeState: TypeStates.GAME.name,
                               gameState: GameStates.UPDATE.name,
-                              data: {action: ''},
-                              from: [componentName] });
+                              data: {action: ''} });
 
   emit('update-player-state', { status: true,
-                                typeState: TypeStates.PLAYER.name,
                                 playerState: PlayerStates.UPDATE.name,
-                                data: {action: respSubmit.content.is_valid ? '' : 'player-penalty-request'},
-                                from: [componentName] });
+                                data: {action: respSubmit.content.is_valid ? '' : 'player-penalty-request'} });
 
   return { status: true };
 };

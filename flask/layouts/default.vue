@@ -69,7 +69,7 @@
 </template>
 
 <script setup>
-import { ref, onBeforeMount, onMounted } from "vue";
+import { ref, onMounted } from "vue";
 import { initConfig, sleep } from "~/assets/helpers.js";
 import { initSetGame, getRunningGames, getGameState, getPlayersInfos } from "~/assets/webAppAPI.js";
 import { GameStates, PlayerStates } from "~/assets/states.js";
@@ -113,10 +113,6 @@ const playersStats = ref([{ name: "John",
 // #####  NUXT  #####
 // ##################
 
-onBeforeMount(() => {
-  console.log(config.value);
-});
-
 onMounted(async () => {
   await checkBackend();
 });
@@ -134,8 +130,6 @@ const updateGenericModalMessage = (ev) => {
 // ###################
 
 const updatePlayerStateHandler = async (ev) => {
-  console.log(`default -- New signal from: ${ev.from} for: ${ev.typeState} requesting state: ${ev.playerState}`);
-
   if (ev.playerState == PlayerStates.UPDATE.name) {
     const resp = await getCurrentPlayersStats()
     playerState.value = resp.status ? PlayerStates.IDLE.name : PlayerStates.LOCKED.name;
@@ -151,8 +145,6 @@ const updatePlayerStateHandler = async (ev) => {
 };
 
 const updateGameStateHandler = async (ev) => {
-  console.log(`default -- New signal from: ${ev.from} for: ${ev.typeState} requesting state: ${ev.gameState}`);
-
   if (ev.gameState == GameStates.ENDED.name) {
     modalGenericMessage.value.modalTitle = 'Game Over';
     modalGenericMessage.value.modalMessage = 'No SET left to be found. Press RESET to play again.';
@@ -182,7 +174,7 @@ const checkBackend = async () => {
   }
   catch (error) {
     version.value = 'Undefined';
-    console.log(`Could not retrieve pySET version from config: ${error}`);
+    console.error(`Could not retrieve pySET version from config: ${error}`);
     return { status: false };
   }
 

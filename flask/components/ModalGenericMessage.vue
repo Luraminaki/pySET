@@ -17,8 +17,6 @@ const props = defineProps({
   modalGenericMessage: { type: Object, required: false, default() { return { triggerModal: false, modalTitle: '', modalMessage: '' }; } },
 });
 
-const componentName = 'ModalGenericMessage';
-
 const emit = defineEmits(['trigger-updated']);
 
 const triggerModal = ref(false);
@@ -47,7 +45,7 @@ watch(
     if (!newValue){
       modalMessage.value = '';
       modalTitle.value = '';
-      emit('trigger-updated', { triggerModal: newValue, modalMessage: modalMessage.value, modalTitle: modalTitle.value, from: [componentName] });
+      emit('trigger-updated', { triggerModal: newValue, modalMessage: modalMessage.value, modalTitle: modalTitle.value });
     }
   }
 );

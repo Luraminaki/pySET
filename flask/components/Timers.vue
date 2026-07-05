@@ -23,7 +23,7 @@
 <script setup>
 import { ref, computed, onBeforeMount, onUnmounted, watch } from "vue";
 import { sendPenalty } from "~/assets/webAppAPI.js";
-import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
+import { GameStates, PlayerStates } from "~/assets/states.js";
 
 // ##################
 // #####  VARS  #####
@@ -37,8 +37,6 @@ const props = defineProps({
   penalisedPlayer: { type: String, required: false, default() { return '' }},
 });
 
-const componentName = 'Timers';
-
 const emit = defineEmits(['update-player-state', 'update-game-state']);
 
 const config = ref(await useConfig());
@@ -47,6 +45,7 @@ const modalGenericMessage = ref({triggerModal: false, modalTitle: '', modalMessa
 
 // Timer shenanigans
 const submitSetTimeout = ref();
+const submitIntervalId = ref(null);
 const submitTimeoutProgress = ref(config.value.SUBMIT_TIMEOUT_SECONDS);
 const submitTimeoutProgressRatio = computed (() => {return (submitTimeoutProgress.value*100)/config.value.SUBMIT_TIMEOUT_SECONDS});
 const submitTimeoutVariant = computed(() => {
@@ -85,6 +84,7 @@ onBeforeMount(() => { });
 
 onUnmounted(() => {
   clearTimeout(submitSetTimeout.value);
+  clearInterval(submitIntervalId.value);
   penaltyIntervalIds.value.forEach((id) => {
     if (id != null) {
       clearInterval(id);
@@ -99,15 +99,7 @@ watch(
       proceedWithSelectedPlayer()
     }
     else if (newValue != PlayerStates.SUBMITTING.name && oldValue == PlayerStates.SUBMITTING.name) {
-      try {
-        clearTimeout(submitSetTimeout.value);
-      }
-      catch (error) {
-        console.log(`No timeout to clear: ${error}`);
-      }
-    }
-    else {
-      console.log(`${componentName} ignored ${TypeStates.PLAYER.name} ${newValue}`);
+      clearTimeout(submitSetTimeout.value);
     }
   }
 );
@@ -117,10 +109,8 @@ watch(
     if (newValue != '') {
       sendPlayerPenalty();
       emit('update-player-state', { status: true,
-                                    typeState: TypeStates.PLAYER.name,
                                     playerState: PlayerStates.IGNORE.name,
-                                    data: {action: 'player-penalty'},
-                                    from: [componentName] });
+                                    data: {action: 'player-penalty'} });
     }
   }
 );
@@ -135,9 +125,15 @@ const updateGenericModalMessage = (ev) => {
 
 const updateSubmitProgressBar = () => {
   const timer = 500;
-  let progressBarEvolution = setInterval(() => {
+
+  if (submitIntervalId.value != null) {
+    clearInterval(submitIntervalId.value);
+  }
+
+  submitIntervalId.value = setInterval(() => {
     if (props.playerState != PlayerStates.SUBMITTING.name) {
-     clearInterval(progressBarEvolution);
+     clearInterval(submitIntervalId.value);
+     submitIntervalId.value = null;
      submitTimeoutProgress.value = config.value.SUBMIT_TIMEOUT_SECONDS;
      return { status: true };
     }
@@ -186,19 +182,12 @@ const proceedWithSelectedPlayer = () => {
 };
 
 const prepareForPlayerPenalty = () => {
-  try {
-    clearTimeout(submitSetTimeout.value);
-  }
-  catch (error) {
-    console.log(`No timeout to clear: ${error}`);
-  }
+  clearTimeout(submitSetTimeout.value);
 
   submitSetTimeout.value = setTimeout(() => {
     emit('update-player-state', { status: true,
-                                  typeState: TypeStates.PLAYER.name,
                                   playerState: PlayerStates.IGNORE.name,
-                                  data: {action: 'player-penalty-request'},
-                                  from: [componentName] });
+                                  data: {action: 'player-penalty-request'} });
 
     clearTimeout(submitSetTimeout.value);
 
@@ -229,10 +218,8 @@ const sendPlayerPenalty = async () => {
   }
 
   emit('update-game-state', { status: true,
-                              typeState: TypeStates.GAME.name,
                               gameState: GameStates.IGNORE.name,
-                              data: {action: 'untoggle-request'},
-                              from: [componentName] });
+                              data: {action: 'untoggle-request'} });
 
   const resp = await sendPenalty(modalGenericMessage, { ...props.gameAuth, playerName: penalisedPlayer.name });
   if (!resp.status) {
@@ -248,10 +235,8 @@ const sendPlayerPenalty = async () => {
   modalGenericMessage.value.triggerModal = true;
 
   emit('update-player-state', { status: true,
-                                typeState: TypeStates.PLAYER.name,
                                 playerState: PlayerStates.UPDATE.name,
-                                data: {action: ''},
-                                from: [componentName] });
+                                data: {action: ''} });
   return { status: true };
 };
 </script>
