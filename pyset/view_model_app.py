@@ -5,14 +5,10 @@
 @rules: https://en.wikipedia.org/wiki/Set_(card_game)#Games
 """
 
-import contextlib
-import enum
 import logging
-import threading
 import time
-from collections.abc import Iterator
 
-from pydantic import BaseModel, ConfigDict, Field, SkipValidation, ValidationError
+from pydantic import BaseModel, ValidationError
 
 from pyset.modules.game.game import Game, GameState
 from pyset.modules.game.set import Grid
@@ -43,36 +39,9 @@ from pyset.modules.web.models import (
     SubmitSetResponse,
     VersionResponse,
 )
+from pyset.session_store import GameSession, LogEvent, SessionStore
 
 __version__ = '0.1.0'
-
-
-class GameSession(BaseModel):
-    """A single running :class:`~pyset.modules.game.game.Game` plus its session bookkeeping.
-
-    ``lock`` serializes access to this specific session's mutable state (the ``Game``/``Grid``/
-    ``Player`` objects reachable through ``game``) so that concurrent requests against *different*
-    sessions can run in parallel, while requests against the *same* session still serialize
-    safely. It isn't session data -- it's excluded from serialization.
-    """
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-    game: Game
-    game_secret: str = ''
-    created: int
-    last_accessed: int
-    ttl: int
-    lock: SkipValidation[threading.Lock] = Field(default_factory=threading.Lock, exclude=True, repr=False)
-
-
-class LogEvent(enum.StrEnum):
-    """Human-readable tags used in log lines (not part of the wire contract)."""
-
-    DATA_RECEIVED = 'DATA_RECEIVED'
-    DELETING_GAME = 'DELETING_GAME'
-    DELETING_GAME_TTL_REACHED = 'DELETING_GAME_TTL_REACHED'
-    ORDER_66 = 'ORDER_66'
 
 
 class ViewModelApp:
@@ -96,71 +65,11 @@ class ViewModelApp:
 
         self.logger.info('%s version %s', self.__class__.__name__, __version__)
 
-        self.set_games: dict[str, GameSession] = {}
-        # Guards structural changes to `set_games` itself -- insert, delete, full replace, and
-        # iteration. It does NOT guard gameplay state within a session; that's each GameSession's
-        # own `lock` (see `_session_lock`), so requests against different sessions don't block
-        # each other.
-        self._table_lock = threading.Lock()
+        self.sessions = SessionStore(config=conf, logger=self.logger)
 
     ################################################
     #              PRIVATE  FUNCTIONS              #
     ################################################
-
-    def _get_session(self, game_id: str) -> GameSession | None:
-        """Thread-safe lookup of a session by id.
-
-        Args:
-            game_id (str): Session to look up.
-
-        Returns:
-            GameSession | None: The session, or None if it doesn't (or no longer) exist.
-        """
-        with self._table_lock:
-            return self.set_games.get(game_id)
-
-    @contextlib.contextmanager
-    def _session_lock(self, game_id: str) -> Iterator[GameSession | None]:
-        """Thread-safe, exclusive access to one session's mutable game state.
-
-        Looks the session up -- it may have been removed concurrently by ``delete_running_games``
-        or the TTL sweep, in which case this yields None -- and, if found, holds that session's own
-        lock for the duration of the ``with`` block. A concurrent request against the *same*
-        session waits; requests against other sessions are unaffected.
-
-        Args:
-            game_id (str): Session to access.
-
-        Yields:
-            GameSession | None: The locked session, or None if it doesn't (or no longer) exist.
-        """
-        session = self._get_session(game_id)
-        if session is None:
-            yield None
-            return
-
-        with session.lock:
-            yield session
-
-    def _clean_inactive_games(self) -> None:
-        """Evicts sessions that have been inactive for longer than their TTL."""
-        if len(self.set_games) >= self.config.max_sessions:
-            now = int(time.time())
-            with self._table_lock:
-                inactive_games = [
-                    game_id
-                    for game_id, session in self.set_games.items()
-                    if (now - session.last_accessed) >= self.config.session_ttl_seconds
-                ]
-
-                for game_id in inactive_games:
-                    last_accessed = time.strftime(
-                        '%Y-%m-%d %H:%M:%S', time.localtime(self.set_games[game_id].last_accessed)
-                    )
-                    self.logger.info(
-                        '%s: %s -- last_accessed: %s', LogEvent.DELETING_GAME_TTL_REACHED.value, game_id, last_accessed
-                    )
-                    del self.set_games[game_id]
 
     def _sanity_check[ReqT: BaseModel](
         self,
@@ -206,7 +115,7 @@ class ViewModelApp:
         if not ignore_empty_game_id and game_id == '':
             return SanityCheckFailure(error=ApiError.INVALID_GAME_ID)
 
-        session = self._get_session(game_id)
+        session = self.sessions.get(game_id)
 
         if not ignore_missing_game and session is None:
             return SanityCheckFailure(error=ApiError.GAME_ID_DOES_NOT_EXIST)
@@ -214,19 +123,10 @@ class ViewModelApp:
         if not ignore_empty_game_secret and session is not None and session.game_secret != game_secret:
             return SanityCheckFailure(error=ApiError.INVALID_SECRET)
 
-        if check_max_sessions and len(self.set_games) >= self.config.max_sessions and session is None:
+        if check_max_sessions and self.sessions.is_full() and session is None:
             return SanityCheckFailure(error=ApiError.MAX_SESSIONS_REACHED)
 
         return SanityCheckSuccess(game_id=game_id, game_secret=game_secret, request=data)
-
-    def _update_game_ttl(self, session: GameSession) -> None:
-        """Bumps a session's last-accessed timestamp.
-
-        Args:
-            session (GameSession): Session to update. Caller must already hold ``session.lock``
-                (see ``_session_lock``).
-        """
-        session.last_accessed = int(time.time())
 
     ################################################
     #                  BASIC  API                  #
@@ -266,13 +166,12 @@ class ViewModelApp:
         Returns:
             RunningGamesResponse: Running sessions summary.
         """
-        self._clean_inactive_games()
+        self.sessions.evict_inactive()
 
-        with self._table_lock:
-            games = [
-                RunningGameInfo(game_id=game_id, has_secret=session.game_secret != '')
-                for game_id, session in self.set_games.items()
-            ]
+        games = [
+            RunningGameInfo(game_id=game_id, has_secret=session.game_secret != '')
+            for game_id, session in self.sessions.items()
+        ]
 
         return RunningGamesResponse(status=StatusFunction.SUCCESS.name, games=games)
 
@@ -293,19 +192,16 @@ class ViewModelApp:
         game_id = sanity_check.game_id
         game_secret = sanity_check.game_secret
 
-        with self._table_lock:
-            if game_id not in self.set_games:
-                now = int(time.time())
-                game = Game(Grid())
-                game.set_penalty_time(self.config.penalty_timeout_seconds)
-                game.set_max_player(self.config.max_players)
-                self.set_games[game_id] = GameSession(
-                    game=game,
-                    game_secret=game_secret,
-                    created=now,
-                    last_accessed=now,
-                    ttl=self.config.session_ttl_seconds,
-                )
+        def build_session() -> GameSession:
+            now = int(time.time())
+            game = Game(Grid())
+            _ = game.set_penalty_time(self.config.penalty_timeout_seconds)
+            _ = game.set_max_player(self.config.max_players)
+            return GameSession(
+                game=game, game_secret=game_secret, created=now, last_accessed=now, ttl=self.config.session_ttl_seconds
+            )
+
+        self.sessions.create_if_missing(game_id, build_session)
 
         return ApiResponse(status=StatusFunction.SUCCESS.name)
 
@@ -319,7 +215,7 @@ class ViewModelApp:
         Returns:
             ApiResponse: Outcome of the operation.
         """
-        self._clean_inactive_games()
+        self.sessions.evict_inactive()
 
         sanity_check = self._sanity_check(
             DeleteRunningGamesRequest,
@@ -339,11 +235,7 @@ class ViewModelApp:
         if secret != self.config.secret:
             return ApiResponse(status=StatusFunction.ERROR.name, error=ApiError.NOT_ALLOWED)
 
-        # Any request already past this point for an individual session (i.e. already holding that
-        # session's lock) simply finishes on its own, now-orphaned GameSession -- its result won't
-        # be visible in `set_games` anymore, which is fine for a rare admin wipe.
-        with self._table_lock:
-            self.set_games = {}
+        self.sessions.clear()
         self.logger.info('%s: Lord Vader will be pleased', LogEvent.ORDER_66.value)
 
         return ApiResponse(status=StatusFunction.SUCCESS.name)
@@ -366,7 +258,7 @@ class ViewModelApp:
         if isinstance(sanity_check, SanityCheckFailure):
             return ApiResponse(status=StatusFunction.ERROR.name, error=sanity_check.error)
 
-        with self._session_lock(sanity_check.game_id) as session:
+        with self.sessions.locked(sanity_check.game_id) as session:
             if session is None:
                 return ApiResponse(status=StatusFunction.ERROR.name, error=ApiError.GAME_ID_DOES_NOT_EXIST)
 
@@ -377,7 +269,7 @@ class ViewModelApp:
 
             result = game.remove_player(player_name=sanity_check.request.name)
 
-            self._update_game_ttl(session)
+            SessionStore.touch(session)
             return PlayersInfosResponse(
                 status=StatusFunction.SUCCESS.name if result.status else StatusFunction.ERROR.name,
                 players_stats=[player.get_stats() for player in game.get_players()],
@@ -399,7 +291,7 @@ class ViewModelApp:
         if isinstance(sanity_check, SanityCheckFailure):
             return ApiResponse(status=StatusFunction.ERROR.name, error=sanity_check.error)
 
-        with self._session_lock(sanity_check.game_id) as session:
+        with self.sessions.locked(sanity_check.game_id) as session:
             if session is None:
                 return ApiResponse(status=StatusFunction.ERROR.name, error=ApiError.GAME_ID_DOES_NOT_EXIST)
 
@@ -416,7 +308,7 @@ class ViewModelApp:
 
             result = game.add_player(player_name=player_name, player_color=player_color)
 
-            self._update_game_ttl(session)
+            SessionStore.touch(session)
             return PlayersInfosResponse(
                 status=StatusFunction.SUCCESS.name if result.status else StatusFunction.ERROR.name,
                 players_stats=[player.get_stats() for player in game.get_players()],
@@ -438,13 +330,13 @@ class ViewModelApp:
         if isinstance(sanity_check, SanityCheckFailure):
             return ApiResponse(status=StatusFunction.ERROR.name, error=sanity_check.error)
 
-        with self._session_lock(sanity_check.game_id) as session:
+        with self.sessions.locked(sanity_check.game_id) as session:
             if session is None:
                 return ApiResponse(status=StatusFunction.ERROR.name, error=ApiError.GAME_ID_DOES_NOT_EXIST)
 
             game = session.game
 
-            self._update_game_ttl(session)
+            SessionStore.touch(session)
             return PlayersInfosResponse(
                 status=StatusFunction.SUCCESS.name,
                 players_stats=[player.get_stats() for player in game.get_players()],
@@ -465,7 +357,7 @@ class ViewModelApp:
         if isinstance(sanity_check, SanityCheckFailure):
             return ApiResponse(status=StatusFunction.ERROR.name, error=sanity_check.error)
 
-        with self._session_lock(sanity_check.game_id) as session:
+        with self.sessions.locked(sanity_check.game_id) as session:
             if session is None:
                 return ApiResponse(status=StatusFunction.ERROR.name, error=ApiError.GAME_ID_DOES_NOT_EXIST)
 
@@ -481,7 +373,7 @@ class ViewModelApp:
             result = game.submit_set_from_player_name(player_name, cards_set)
             game.update_game(enable_pause=False)
 
-            self._update_game_ttl(session)
+            SessionStore.touch(session)
             return SubmitSetResponse(
                 status=StatusFunction.SUCCESS.name,
                 is_valid=result.status,
@@ -505,14 +397,14 @@ class ViewModelApp:
         if isinstance(sanity_check, SanityCheckFailure):
             return ApiResponse(status=StatusFunction.ERROR.name, error=sanity_check.error)
 
-        with self._session_lock(sanity_check.game_id) as session:
+        with self.sessions.locked(sanity_check.game_id) as session:
             if session is None:
                 return ApiResponse(status=StatusFunction.ERROR.name, error=ApiError.GAME_ID_DOES_NOT_EXIST)
 
             game = session.game
             result = game.apply_penalty_from_player_name(sanity_check.request.player_name)
 
-            self._update_game_ttl(session)
+            SessionStore.touch(session)
             return GameStateResponse(
                 status=StatusFunction.SUCCESS.name if result.status else StatusFunction.ERROR.name,
                 game_state=game.get_game_state(),
@@ -536,7 +428,7 @@ class ViewModelApp:
         if isinstance(sanity_check, SanityCheckFailure):
             return ApiResponse(status=StatusFunction.ERROR.name, error=sanity_check.error)
 
-        with self._session_lock(sanity_check.game_id) as session:
+        with self.sessions.locked(sanity_check.game_id) as session:
             if session is None:
                 return ApiResponse(status=StatusFunction.ERROR.name, error=ApiError.GAME_ID_DOES_NOT_EXIST)
 
@@ -553,7 +445,7 @@ class ViewModelApp:
             if self.logger.isEnabledFor(logging.DEBUG):
                 self.logger.debug('Grid Layout:\n%s', game.grid.grid_as_str())
 
-            self._update_game_ttl(session)
+            SessionStore.touch(session)
             return GameGridResponse(
                 status=StatusFunction.SUCCESS.name,
                 grid=game.grid.arrange_cards_to_grid(),
@@ -575,7 +467,7 @@ class ViewModelApp:
         if isinstance(sanity_check, SanityCheckFailure):
             return ApiResponse(status=StatusFunction.ERROR.name, error=sanity_check.error)
 
-        with self._session_lock(sanity_check.game_id) as session:
+        with self.sessions.locked(sanity_check.game_id) as session:
             if session is None:
                 return ApiResponse(status=StatusFunction.ERROR.name, error=ApiError.GAME_ID_DOES_NOT_EXIST)
 
@@ -583,8 +475,8 @@ class ViewModelApp:
             old_game = session.game
 
             new_game = Game(Grid())
-            new_game.set_penalty_time(self.config.penalty_timeout_seconds)
-            new_game.set_max_player(self.config.max_players)
+            _ = new_game.set_penalty_time(self.config.penalty_timeout_seconds)
+            _ = new_game.set_max_player(self.config.max_players)
             session.game = new_game
 
             # hard_reset defaults to True, i.e. the common case -- only bother snapshotting and
@@ -592,14 +484,14 @@ class ViewModelApp:
             if not hard_reset:
                 for player in old_game.get_players():
                     stats = player.get_stats()
-                    new_game.add_player(
+                    _ = new_game.add_player(
                         player_name=stats.name,
                         player_color=stats.color,
                         is_ai=stats.is_ai,
                         difficulty=stats.difficulty,
                     )
 
-            self._update_game_ttl(session)
+            SessionStore.touch(session)
             return GameStateResponse(status=StatusFunction.SUCCESS.name, game_state=new_game.get_game_state())
 
     @export
@@ -616,7 +508,7 @@ class ViewModelApp:
         if isinstance(sanity_check, SanityCheckFailure):
             return ApiResponse(status=StatusFunction.ERROR.name, error=sanity_check.error)
 
-        with self._session_lock(sanity_check.game_id) as session:
+        with self.sessions.locked(sanity_check.game_id) as session:
             if session is None:
                 return ApiResponse(status=StatusFunction.ERROR.name, error=ApiError.GAME_ID_DOES_NOT_EXIST)
 
@@ -625,7 +517,7 @@ class ViewModelApp:
             if self.logger.isEnabledFor(logging.DEBUG):
                 self.logger.debug('Grid Layout:\n%s', game.grid.grid_as_str())
 
-            self._update_game_ttl(session)
+            SessionStore.touch(session)
             return GameGridResponse(
                 status=StatusFunction.SUCCESS.name,
                 grid=game.grid.arrange_cards_to_grid(),
@@ -647,11 +539,11 @@ class ViewModelApp:
         if isinstance(sanity_check, SanityCheckFailure):
             return ApiResponse(status=StatusFunction.ERROR.name, error=sanity_check.error)
 
-        with self._session_lock(sanity_check.game_id) as session:
+        with self.sessions.locked(sanity_check.game_id) as session:
             if session is None:
                 return ApiResponse(status=StatusFunction.ERROR.name, error=ApiError.GAME_ID_DOES_NOT_EXIST)
 
-            self._update_game_ttl(session)
+            SessionStore.touch(session)
             return GameStateResponse(status=StatusFunction.SUCCESS.name, game_state=session.game.get_game_state())
 
     @export
@@ -668,12 +560,12 @@ class ViewModelApp:
         if isinstance(sanity_check, SanityCheckFailure):
             return ApiResponse(status=StatusFunction.ERROR.name, error=sanity_check.error)
 
-        with self._session_lock(sanity_check.game_id) as session:
+        with self.sessions.locked(sanity_check.game_id) as session:
             if session is None:
                 return ApiResponse(status=StatusFunction.ERROR.name, error=ApiError.GAME_ID_DOES_NOT_EXIST)
 
             game = session.game
-            self._update_game_ttl(session)
+            SessionStore.touch(session)
             return HintsResponse(
                 status=StatusFunction.SUCCESS.name,
                 sets=game.grid.get_unique_sets_on_grid(),

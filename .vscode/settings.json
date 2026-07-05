@@ -78,7 +78,7 @@
         "variant": "cpp"
     },
     "python.testing.pytestArgs": [
-        "tb_server/tests/"
+        "tests/"
     ],
     "js/ts.tsdk.path": "node_modules/typescript/lib",
     "python.testing.unittestEnabled": false,

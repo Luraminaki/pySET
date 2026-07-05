@@ -100,7 +100,7 @@ class Grid:
 
         # Draw 3 more cards as long as no set are found in the current grid
         while not self._unique_sets_on_grid:
-            self.draw_cards_if_possible()
+            _ = self.draw_cards_if_possible()
             self._unique_sets_on_grid = self._find_all_valid_set_from(self._cards_on_grid)
 
     #
@@ -351,7 +351,7 @@ def main(full_init_start: bool = False) -> None:
                 # are less than the minimum amount required on the playground
                 if set_grid.is_missing_cards_on_grid():
                     # And if any are left in the pile that is
-                    set_grid.draw_cards_if_possible()
+                    _ = set_grid.draw_cards_if_possible()
                 # Time to find all the possible set in that can be made from the cards laid one the playground
                 set_grid.update_unique_sets_on_grid()
 
@@ -362,7 +362,7 @@ def main(full_init_start: bool = False) -> None:
         else:
             # Oh... Turns out there is no set that can be made from the cards laid on the playground...
             # Let's add some cards to the playground
-            set_grid.draw_cards_if_possible()
+            _ = set_grid.draw_cards_if_possible()
             # And check when the next loop starts if there is at least a set that can be made from
             # the cards laid on the playground
             set_grid.update_unique_sets_on_grid()

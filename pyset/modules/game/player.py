@@ -71,7 +71,7 @@ class Player:
             self._set_found_elapsed_time.append(int(time.time() - timer))
 
         else:
-            self.apply_penalty()
+            _ = self.apply_penalty()
 
         return found_valid
 

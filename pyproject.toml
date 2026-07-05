@@ -17,8 +17,8 @@ dependencies = [
     "flask-cors",
     "Werkzeug",
     "gunicorn",
-    "pydantic>=2",
-    "pydantic-settings>=2",
+    "pydantic>=2,<3",
+    "pydantic-settings>=2,<3",
     "python-dotenv",
 ]
 

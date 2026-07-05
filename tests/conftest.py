@@ -1,8 +1,11 @@
 """Shared pytest fixtures for the pySET test suite."""
 
+import logging
+
 import pytest
 
 from pyset.modules.misc.models import AppConfig
+from pyset.session_store import SessionStore
 from pyset.view_model_app import ViewModelApp
 
 
@@ -38,3 +41,9 @@ def app_config() -> AppConfig:
 def vm(app_config: AppConfig) -> ViewModelApp:
     """A ViewModelApp wired with the test config, exercised without going through Flask."""
     return ViewModelApp(app_config, scheme='http://', subdomain='localhost')
+
+
+@pytest.fixture
+def session_store(app_config: AppConfig) -> SessionStore:
+    """A SessionStore wired with the test config, for direct unit testing."""
+    return SessionStore(config=app_config, logger=logging.getLogger('test_session_store'))

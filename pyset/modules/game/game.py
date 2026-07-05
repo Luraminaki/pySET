@@ -166,7 +166,7 @@ class Game:
         if self._game_state == GameState.ENDED:
             return SubmitSetResult(status=False, cards_set=card_set, error='GAME_ENDED')
 
-        player, player_id = self._select_player_from_name(player_name=player_name)
+        player, _ = self._select_player_from_name(player_name=player_name)
         if player is None:
             return SubmitSetResult(status=False, cards_set=card_set, error='PLAYER_IS_NONE')
 
@@ -203,7 +203,7 @@ class Game:
         if player is None:
             return PlayerActionResult(status=False, error='PLAYER_IS_NONE')
 
-        player.apply_penalty()
+        _ = player.apply_penalty()
         return PlayerActionResult(status=True)
 
     def update_game(self, enable_pause: bool = False) -> None:
@@ -215,7 +215,7 @@ class Game:
         self.grid.update_unique_sets_on_grid()
 
         if self.grid.is_missing_cards_on_grid():
-            self.grid.draw_cards_if_possible()
+            _ = self.grid.draw_cards_if_possible()
             self.grid.update_unique_sets_on_grid()
 
         while not self.grid.has_unique_sets_on_grid():
@@ -231,7 +231,7 @@ class Game:
     def resume_players_penalty(self) -> None:
         """Shifts every player's penalty clock forward by the last pause duration."""
         for player in self._players:
-            player.resume_penalty(self._elapsed_time_during_pause)
+            _ = player.resume_penalty(self._elapsed_time_during_pause)
 
     def toggle_timer(self, enable_pause: bool = False) -> None:
         """Pauses or resumes the game timer.
@@ -286,7 +286,7 @@ class Game:
 def main() -> None:
     """Runs a scripted demo game between a single AI player and itself."""
     set_game = Game(Grid())
-    set_game.add_player('', is_ai=True)
+    _ = set_game.add_player('', is_ai=True)
 
     ai_player: Player | None = None
     ai_player_name = ''

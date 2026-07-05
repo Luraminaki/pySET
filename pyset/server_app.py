@@ -49,7 +49,7 @@ def create_app(config: str = 'config.json', scheme: str = 'https://', subdomain:
     app.secret_key = os.urandom(32).hex()
     app.register_error_handler(404, TemplateView.not_found)
 
-    CORS(app)
+    _ = CORS(app)
 
     TemplateView.register(app)
     AppView.api_class = ViewModel(conf, scheme, subdomain)
@@ -61,7 +61,7 @@ def create_app(config: str = 'config.json', scheme: str = 'https://', subdomain:
 if __name__ == '__main__':
     # Parse arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--configuration', help='Configuration file location', required=True)
+    _ = parser.add_argument('-c', '--configuration', help='Configuration file location', required=True)
     args = parser.parse_args()
 
     APP = create_app(args.configuration, scheme='http://', subdomain='0.0.0.0')
