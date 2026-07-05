@@ -32,14 +32,12 @@
     <About/>
   </b-modal>
 
-  <div :v-model="modalGenericMessage">
-    <ModalGenericMessage :modalGenericMessage="modalGenericMessage" @trigger-updated="updateGenericModalMessage($event)"/>
-  </div>
+  <ModalGenericMessage :modalGenericMessage="modalGenericMessage" @trigger-updated="updateGenericModalMessage($event)"/>
 
 </template>
 
 <script setup>
-import { ref, computed, onBeforeMount, onMounted } from "vue";
+import { ref, computed, onBeforeMount } from "vue";
 import { resetGame } from "~/assets/webAppAPI.js";
 import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
 
@@ -53,7 +51,7 @@ const props = defineProps({
   playerState: { type: String, required: true },
 });
 
-const componentName = ref('');
+const componentName = 'HRControl';
 
 const emit = defineEmits(['update-player-state', 'update-game-state']);
 
@@ -69,10 +67,6 @@ const disableReset = computed(() => (props.gameState == GameStates.NEW.name ||
 // ##################
 
 onBeforeMount(() => { });
-
-onMounted(async () => {
-  componentName.value = getCurrentInstance().type.__name;
-});
 
 // ###################
 // #####   GUI   #####
@@ -115,12 +109,12 @@ const reset = async (hardReset) => {
                               typeState: TypeStates.GAME.name,
                               gameState: GameStates.RESET.name,
                               data: {action: ''},
-                              from: [componentName.value] });
+                              from: [componentName] });
   emit('update-player-state', { status: resp.status,
                                 typeState: TypeStates.PLAYER.name,
                                 playerState: PlayerStates.UPDATE.name,
                                 data: {action: ''},
-                                from: [componentName.value] })
+                                from: [componentName] })
 
   return { status: true };
 };

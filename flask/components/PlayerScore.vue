@@ -33,9 +33,7 @@
     </b-accordion-item>
   </b-accordion>
 
-  <div :v-model="modalGenericMessage">
-    <ModalGenericMessage :modalGenericMessage="modalGenericMessage" @trigger-updated="updateGenericModalMessage($event)"/>
-  </div>
+  <ModalGenericMessage :modalGenericMessage="modalGenericMessage" @trigger-updated="updateGenericModalMessage($event)"/>
 
   <b-modal v-model="modalPlayerUpdate.do"
            :title="modalPlayerUpdate.modalTitle"
@@ -47,7 +45,7 @@
 </template>
 
 <script setup>
-import { ref, onBeforeMount, onMounted } from "vue";
+import { ref, onBeforeMount } from "vue";
 import { removePlayer } from "~/assets/webAppAPI.js";
 import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
 
@@ -62,7 +60,7 @@ const props = defineProps({
   playersStats: { type: Array, required: false, default() { return [] } },
 });
 
-const componentName = ref('');
+const componentName = 'PlayerScore';
 
 const emit = defineEmits(['update-player-state']);
 
@@ -79,10 +77,6 @@ const disableRemove = computed(() => (props.playersStats.length == 0 ||
 // ##################
 
 onBeforeMount(() => { });
-
-onMounted(async () => {
-  componentName.value = getCurrentInstance().type.__name;
-});
 
 // ###################
 // #####   GUI   #####
@@ -131,7 +125,7 @@ const updatePlayersStats = async () => {
                                 typeState: TypeStates.PLAYER.name,
                                 playerState: PlayerStates.UPDATE.name,
                                 data: {action: ''},
-                                from: [componentName.value] } );
+                                from: [componentName] } );
 
   return { status: true };
 };

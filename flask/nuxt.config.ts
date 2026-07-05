@@ -3,6 +3,13 @@
 export default defineNuxtConfig({
   ssr: false,
 
+  // Works around a Nuxt/Vite regression (nuxt/nuxt#35033) where `nuxt dev`/`build` crashes with
+  // "No entry found in rollupOptions.input" on ssr:false projects. Fixed upstream in nuxt/nuxt#35037
+  // (targeted for 3.21.9+); remove this once that lands and gets picked up.
+  experimental: {
+    viteEnvironmentApi: true
+  },
+
   vite: {
     css: {
       preprocessorOptions: {

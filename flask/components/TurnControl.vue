@@ -12,7 +12,7 @@
 
   <p v-if="props.playersStats.length == 0" style="color: red; font-size: 0.63rem; margin-bottom: 0px; margin-top: 0px">Add at least one player to start</p>
 
-  <b-modal v-model="modalSelectPlayer.do" :title="modalSelectPlayer.modalTitle" @hide.prevent hide-footer>
+  <b-modal v-model="modalSelectPlayer.do" :title="modalSelectPlayer.modalTitle" no-close-on-backdrop no-close-on-esc no-footer>
     <div class="is-flex">
       <BButton pill v-for="player in humanPlayers" :key="player.name" @click="proceedWithSelectedPlayer(player.name)">
         {{ player.name }}
@@ -20,14 +20,12 @@
     </div>
   </b-modal>
 
-  <div :v-model="modalGenericMessage">
-    <ModalGenericMessage :modalGenericMessage="modalGenericMessage" @trigger-updated="updateGenericModalMessage($event)"/>
-  </div>
+  <ModalGenericMessage :modalGenericMessage="modalGenericMessage" @trigger-updated="updateGenericModalMessage($event)"/>
 
 </template>
 
 <script setup>
-import { ref, computed, onBeforeMount, onMounted, watch } from "vue";
+import { ref, computed, onBeforeMount, watch } from "vue";
 import { changeGameState, submitSet, getHints } from "~/assets/webAppAPI.js";
 import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
 
@@ -44,7 +42,7 @@ const props = defineProps({
   validAmountSelectedCards: { type: Number, required: false, default() { return 3 } },
 });
 
-const componentName = ref('');
+const componentName = 'TurnControl';
 
 const emit = defineEmits(['update-player-state', 'update-game-state']);
 
@@ -103,10 +101,6 @@ const selectedPlayer = ref('');
 
 onBeforeMount(() => { });
 
-onMounted(async () => {
-  componentName.value = getCurrentInstance().type.__name;
-});
-
 // https://stackoverflow.com/questions/59125857/how-to-watch-props-change-with-vue-composition-api-vue-3
 watch(
   () => props.playerState, async (newValue, oldValue) => {
@@ -130,10 +124,10 @@ const updateGenericModalMessage = (ev) => {
 
 const selectSubmittingPlayer = async () => {
   emit('update-game-state', { status: true,
-                              typeState: TypeStates.GAME,
+                              typeState: TypeStates.GAME.name,
                               gameState: GameStates.IGNORE.name,
                               data: {action: 'untoggle-request'},
-                              from: [componentName.value] });
+                              from: [componentName] });
 
   if (humanPlayers.value.length == 1) {
     const respSelectedPlayer = proceedWithSelectedPlayer(humanPlayers.value[0].name);
@@ -170,7 +164,7 @@ const proceedWithSelectedPlayer = async (playerName) => {
                                 typeState: TypeStates.PLAYER.name,
                                 playerState: PlayerStates.SUBMITTING.name,
                                 data: {action: '', playerName: playerName},
-                                from: [componentName.value] });
+                                from: [componentName] });
 
   return { status: true };
 };
@@ -191,7 +185,7 @@ const changeGameStateRequest = async () => {
                               typeState: TypeStates.GAME.name,
                               gameState: GameStates[respGameState.content.game_state].name,
                               data: {action: ''},
-                              from: [componentName.value] });
+                              from: [componentName] });
 
   return { status: true };
 };
@@ -207,7 +201,7 @@ const getRandomHint = async () => {
                               typeState: TypeStates.GAME.name,
                               gameState: GameStates.IGNORE.name,
                               data: {action: 'hint', hintedCards: resp.content.sets[random]},
-                              from: [componentName.value] });
+                              from: [componentName] });
 
   return { status: true };
 };
@@ -217,7 +211,7 @@ const sendSelection = async (playerName) => {
                               typeState: TypeStates.GAME.name,
                               gameState: GameStates.IGNORE.name,
                               data: {action: 'untoggle-request'},
-                              from: [componentName.value] });
+                              from: [componentName] });
 
   const respSubmit = await submitSet(modalGenericMessage, { ...props.gameAuth, playerName: playerName, set: props.selectedCards });
 
@@ -230,14 +224,14 @@ const sendSelection = async (playerName) => {
                                   typeState: TypeStates.GAME.name,
                                   gameState: GameStates.UPDATE.name,
                                   data: {action: ''},
-                                  from: [componentName.value] });
+                                  from: [componentName] });
     }
 
     emit('update-player-state', { status: true,
                                   typeState: TypeStates.PLAYER.name,
                                   playerState: PlayerStates.UPDATE.name,
                                   data: {action: ''},
-                                  from: [componentName.value] });
+                                  from: [componentName] });
 
     return { status: respSubmit.status };
   }
@@ -246,13 +240,13 @@ const sendSelection = async (playerName) => {
                               typeState: TypeStates.GAME.name,
                               gameState: GameStates.UPDATE.name,
                               data: {action: ''},
-                              from: [componentName.value] });
+                              from: [componentName] });
 
   emit('update-player-state', { status: true,
                                 typeState: TypeStates.PLAYER.name,
                                 playerState: PlayerStates.UPDATE.name,
                                 data: {action: respSubmit.content.is_valid ? '' : 'player-penalty-request'},
-                                from: [componentName.value] });
+                                from: [componentName] });
 
   return { status: true };
 };

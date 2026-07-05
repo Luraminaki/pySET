@@ -7,7 +7,7 @@
 </template>
 
 <script setup>
-import { ref, onBeforeMount, onMounted, watch } from "vue";
+import { ref, onBeforeMount, watch } from "vue";
 
 // ##################
 // #####  VARS  #####
@@ -17,7 +17,7 @@ const props = defineProps({
   modalGenericMessage: { type: Object, required: false, default() { return { triggerModal: false, modalTitle: '', modalMessage: '' }; } },
 });
 
-const componentName = ref('');
+const componentName = 'ModalGenericMessage';
 
 const emit = defineEmits(['trigger-updated']);
 
@@ -30,10 +30,6 @@ const modalMessage = ref('');
 // ##################
 
 onBeforeMount(() => { });
-
-onMounted(async () => {
-  componentName.value = getCurrentInstance().type.__name;
-});
 
 // https://stackoverflow.com/questions/59125857/how-to-watch-props-change-with-vue-composition-api-vue-3
 watch(
@@ -51,7 +47,7 @@ watch(
     if (!newValue){
       modalMessage.value = '';
       modalTitle.value = '';
-      emit('trigger-updated', { triggerModal: newValue, modalMessage: modalMessage.value, modalTitle: modalTitle.value, from: [componentName.value] });
+      emit('trigger-updated', { triggerModal: newValue, modalMessage: modalMessage.value, modalTitle: modalTitle.value, from: [componentName] });
     }
   }
 );

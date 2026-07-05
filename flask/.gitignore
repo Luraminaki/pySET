@@ -60,6 +60,9 @@ typings/
 # Yarn lock file
 yarn.lock
 
+# NPM Lock file
+package-lock.json
+
 # dotenv environment variables file
 .env
 
@@ -96,3 +99,9 @@ sw.*
 
 # Vim swap files
 *.swp
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

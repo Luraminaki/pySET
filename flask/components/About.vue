@@ -2,7 +2,7 @@
   
   <BCard img-src="/Set-game-cards.png"
          img-alt="Set-game-cards"
-         img-top
+         img-placement="top"
          tag="article">
     <BCardText>
 
@@ -59,20 +59,4 @@
 </template>
 
 <script setup>
-import { onBeforeMount } from "vue";
-
-// ##################
-// #####  VARS  #####
-// ##################
-
-// ##################
-// #####  NUXT  #####
-// ##################
-
-onBeforeMount(() => { });
-
-// ###################
-// ######  GUI  ######
-// ###################
-
 </script>

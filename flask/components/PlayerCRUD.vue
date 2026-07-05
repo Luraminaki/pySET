@@ -19,14 +19,12 @@
     </div>
   </b-modal>
 
-  <div :v-model="modalGenericMessage">
-    <ModalGenericMessage :modalGenericMessage="modalGenericMessage" @trigger-updated="updateGenericModalMessage($event)"/>
-  </div>
+  <ModalGenericMessage :modalGenericMessage="modalGenericMessage" @trigger-updated="updateGenericModalMessage($event)"/>
 
 </template>
 
 <script setup>
-import { ref, computed, onBeforeMount, onMounted, watch } from "vue";
+import { ref, computed, onBeforeMount, watch } from "vue";
 import { sleep } from "~/assets/helpers.js";
 import { addPlayer } from "~/assets/webAppAPI.js";
 import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
@@ -42,12 +40,11 @@ const props = defineProps({
   playersStats: { type: Array, required: false, default() { return [] } },
 });
 
-const componentName = ref('');
+const componentName = 'PlayerCRUD';
 
 const emit = defineEmits(['update-player-state']);
 
-const config = ref({});
-config.value = await useState('config').value.then(r => r);
+const config = ref(await useConfig());
 
 const modalGenericMessage = ref({triggerModal: false, modalTitle: '', modalMessage: ''});
 const modalPlayerUpdate = ref({ do: false, modalTitle: '', modalMessage: '', action: '', player: { name: '' } });
@@ -81,10 +78,6 @@ function findPlayerByColor(player, index) {
 // ##################
 
 onBeforeMount(() => { });
-
-onMounted(async () => {
-  componentName.value = getCurrentInstance().type.__name;
-});
 
 // https://stackoverflow.com/questions/59125857/how-to-watch-props-change-with-vue-composition-api-vue-3
 watch(
@@ -150,7 +143,7 @@ const updatePlayersStats = async () => {
                                 typeState: TypeStates.PLAYER.name,
                                 playerState: PlayerStates.UPDATE.name,
                                 data: {action: ''},
-                                from: [componentName.value] } );
+                                from: [componentName] } );
 
   return { status: true };
 };

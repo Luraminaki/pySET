@@ -1,0 +1,19 @@
+{
+    "service_id": "pySET-test",
+    "version": "0.2.0",
+    "app_version": "0.1.0",
+    "logging_level": "WARNING",
+    "MAX_SESSIONS": 1000,
+    "SESSION_NAME_MAX_CHARS": 36,
+    "SESSION_TTL_SECONDS": 1800,
+    "MAX_PLAYERS": 6,
+    "PLAYER_NAME_MAX_CHARS": 12,
+    "SUBMIT_TIMEOUT_SECONDS": 10,
+    "PENALTY_TIMEOUT_SECONDS": 10,
+    "ai": {
+        "easy": [10000, 15000],
+        "normal": [7000, 10000],
+        "hard": [3000, 5000]
+    },
+    "secret": ""
+}

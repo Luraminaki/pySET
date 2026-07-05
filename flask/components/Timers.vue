@@ -21,7 +21,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onBeforeMount, onMounted, watch } from "vue";
+import { ref, computed, onBeforeMount, onUnmounted, watch } from "vue";
 import { sendPenalty } from "~/assets/webAppAPI.js";
 import { TypeStates, GameStates, PlayerStates } from "~/assets/states.js";
 
@@ -37,12 +37,11 @@ const props = defineProps({
   penalisedPlayer: { type: String, required: false, default() { return '' }},
 });
 
-const componentName = ref('');
+const componentName = 'Timers';
 
 const emit = defineEmits(['update-player-state', 'update-game-state']);
 
-const config = ref({});
-config.value = await useState('config').value.then(r => r);
+const config = ref(await useConfig());
 
 const modalGenericMessage = ref({triggerModal: false, modalTitle: '', modalMessage: ''});
 
@@ -64,6 +63,7 @@ const submitTimeoutVariant = computed(() => {
 
 const variantsPenaltyProgress = computed(() => { return props.playersStats.map(player => player.color) });
 const playersTimerPenaltyProgress = ref(Array.from({length: config.value.MAX_PLAYERS}, (_, __) => 0));
+const penaltyIntervalIds = ref(Array.from({length: config.value.MAX_PLAYERS}, (_, __) => null));
 const playersBarPenaltyProgress = computed(() => {
   const pbpp = [];
 
@@ -83,8 +83,13 @@ const playersBarPenaltyProgress = computed(() => {
 
 onBeforeMount(() => { });
 
-onMounted(async () => {
-  componentName.value = getCurrentInstance().type.__name;
+onUnmounted(() => {
+  clearTimeout(submitSetTimeout.value);
+  penaltyIntervalIds.value.forEach((id) => {
+    if (id != null) {
+      clearInterval(id);
+    }
+  });
 });
 
 // https://stackoverflow.com/questions/59125857/how-to-watch-props-change-with-vue-composition-api-vue-3
@@ -102,7 +107,7 @@ watch(
       }
     }
     else {
-      console.log(`${componentName.value} ignored ${TypeStates.PLAYER.name} ${newValue}`);
+      console.log(`${componentName} ignored ${TypeStates.PLAYER.name} ${newValue}`);
     }
   }
 );
@@ -115,7 +120,7 @@ watch(
                                     typeState: TypeStates.PLAYER.name,
                                     playerState: PlayerStates.IGNORE.name,
                                     data: {action: 'player-penalty'},
-                                    from: [componentName.value] });
+                                    from: [componentName] });
     }
   }
 );
@@ -145,9 +150,15 @@ const updateSubmitProgressBar = () => {
 
 const updatePlayerPenaltyProgressBar = (playerIndex) => {
   const timer = 500;
-  let progressBarEvolution = setInterval(() => {
+
+  if (penaltyIntervalIds.value[playerIndex] != null) {
+    clearInterval(penaltyIntervalIds.value[playerIndex]);
+  }
+
+  penaltyIntervalIds.value[playerIndex] = setInterval(() => {
     if (playersTimerPenaltyProgress.value[playerIndex] == 0) {
-     clearInterval(progressBarEvolution);
+     clearInterval(penaltyIntervalIds.value[playerIndex]);
+     penaltyIntervalIds.value[playerIndex] = null;
      return { status: true };
     }
 
@@ -187,7 +198,7 @@ const prepareForPlayerPenalty = () => {
                                   typeState: TypeStates.PLAYER.name,
                                   playerState: PlayerStates.IGNORE.name,
                                   data: {action: 'player-penalty-request'},
-                                  from: [componentName.value] });
+                                  from: [componentName] });
 
     clearTimeout(submitSetTimeout.value);
 
@@ -221,7 +232,7 @@ const sendPlayerPenalty = async () => {
                               typeState: TypeStates.GAME.name,
                               gameState: GameStates.IGNORE.name,
                               data: {action: 'untoggle-request'},
-                              from: [componentName.value] });
+                              from: [componentName] });
 
   const resp = await sendPenalty(modalGenericMessage, { ...props.gameAuth, playerName: penalisedPlayer.name });
   if (!resp.status) {
@@ -240,7 +251,7 @@ const sendPlayerPenalty = async () => {
                                 typeState: TypeStates.PLAYER.name,
                                 playerState: PlayerStates.UPDATE.name,
                                 data: {action: ''},
-                                from: [componentName.value] });
+                                from: [componentName] });
   return { status: true };
 };
 </script>

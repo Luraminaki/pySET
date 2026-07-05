@@ -6,10 +6,10 @@
     <BRow v-for="(row, index) in props.playersStat.valid_sets" :key="index">
       <p>SET n° {{ index + 1 }} (Found in {{ props.playersStat.answers_time[index] }} seconds):</p>
       <BCol v-for="card in row" :key="card">
-        <BCard overlay border-variant="secondary"
+        <BCard img-placement="overlay" border-variant="secondary"
          :img-src="`/cards/${card}.png`"
          :img-alt="card"
-         :id="`card-${card}`"/>
+         :id="`history-card-${card}`"/>
       </BCol>
     </BRow>
   </BOffcanvas>
@@ -17,7 +17,7 @@
 </template>
 
 <script setup>
-import { ref, onBeforeMount, onMounted } from "vue";
+import { ref, onBeforeMount } from "vue";
 
 // ##################
 // #####  VARS  #####
@@ -27,7 +27,7 @@ const props = defineProps({
   playersStat: { type: Object, required: false, default() { return {} } },
 });
 
-const componentName = ref('');
+const componentName = 'ScoreDetails';
 
 const showDetails = ref(false);
 
@@ -36,8 +36,4 @@ const showDetails = ref(false);
 // ##################
 
 onBeforeMount(() => { });
-
-onMounted(async () => {
-  componentName.value = getCurrentInstance().type.__name;
-});
 </script>

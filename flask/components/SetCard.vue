@@ -1,16 +1,17 @@
 <template>
 
   <BCard no-body
-         overlay border-variant="secondary"
+         img-placement="overlay" border-variant="secondary"
          :img-src="`/cards/${props.card}.png`"
          :img-alt="props.card"
          :id="`card-${props.card}`"
+         :class="cardClass"
          @click="toggleCard('card border-info')"/>
 
 </template>
 
 <script setup>
-import { ref, onBeforeMount, onMounted, watch } from "vue";
+import { ref, onBeforeMount, watch } from "vue";
 
 // ##################
 // #####  VARS  #####
@@ -24,19 +25,16 @@ const props = defineProps({
 
 const emit = defineEmits(['card-toggled']);
 
-const componentName = ref('');
+const componentName = 'SetCard';
 
 const cardIsSelected = ref(false);
+const cardClass = ref('card border-secondary');
 
 // ##################
 // #####  NUXT  #####
 // ##################
 
 onBeforeMount(() => { });
-
-onMounted(async () => {
-  componentName.value = getCurrentInstance().type.__name;
-});
 
 // https://stackoverflow.com/questions/59125857/how-to-watch-props-change-with-vue-composition-api-vue-3
 watch(
@@ -52,7 +50,7 @@ watch(
       await toggleCard();
     }
     else {
-      console.log(`${componentName.value} -- Card Event ${newValue} not handled`);
+      console.log(`${componentName} -- Card Event ${newValue} not handled`);
     }
   }
 );
@@ -62,13 +60,11 @@ watch(
 // ###################
 
 const toggleCard = async (toggleType) => {
-  const cardElement = document.getElementById(`card-${props.card}`);
-
   if (cardIsSelected.value) {
-    cardElement.className = "card border-secondary";
+    cardClass.value = "card border-secondary";
     cardIsSelected.value = false;
 
-    emit('card-toggled', { status: true, action: 'remove', card: props.card, from: [componentName.value] });
+    emit('card-toggled', { status: true, action: 'remove', card: props.card, from: [componentName] });
 
     return { status: true };
   }
@@ -77,10 +73,10 @@ const toggleCard = async (toggleType) => {
     return { status: true };
   }
 
-  cardElement.className = toggleType;
+  cardClass.value = toggleType;
   cardIsSelected.value = true;
 
-  emit('card-toggled', { status: true, action: 'add', card: props.card, from: [componentName.value] });
+  emit('card-toggled', { status: true, action: 'add', card: props.card, from: [componentName] });
 
   return { status: true };
 };

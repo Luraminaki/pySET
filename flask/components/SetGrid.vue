@@ -46,9 +46,7 @@
                @update-player-state="updatePlayerStateHandler($event)"
                @update-game-state="updateGameStateHandler($event)"/>
 
-  <div :v-model="modalGenericMessage">
-    <ModalGenericMessage :modalGenericMessage="modalGenericMessage" @trigger-updated="updateGenericModalMessage($event)"/>
-  </div>
+  <ModalGenericMessage :modalGenericMessage="modalGenericMessage" @trigger-updated="updateGenericModalMessage($event)"/>
 
 </template>
 
@@ -70,12 +68,11 @@ const props = defineProps({
   hintedCards: { type: Array, required: false, default() { return [] } },
 });
 
-const componentName = ref('');
+const componentName = 'SetGrid';
 
 const emit = defineEmits(['update-player-state', 'update-game-state']);
 
-const config = ref({});
-config.value = await useState('config').value.then(r => r);
+const config = ref(await useConfig());
 
 const modalGenericMessage = ref({triggerModal: false, modalTitle: '', modalMessage: ''});
 
@@ -104,7 +101,6 @@ const validAmountSelectedCards = computed(() => (grid.value[0].length));
 onBeforeMount(() => { });
 
 onMounted(async () => {
-  componentName.value = getCurrentInstance().type.__name;
   await loadGame(true)
 });
 
@@ -118,7 +114,7 @@ watch(
       await loadGame(false);
     }
     else {
-      console.log(`${componentName.value} -- ${TypeStates.GAME.name} ${newValue} not handled`);
+      console.log(`${componentName} -- ${TypeStates.GAME.name} ${newValue} not handled`);
     }
   }
 );
@@ -170,7 +166,7 @@ const cardHandler = async (ev) => {
     }
   }
   else {
-    console.log(`${componentName.value} -- Card Action ${ev.action} not handled`);
+    console.log(`${componentName} -- Card Action ${ev.action} not handled`);
   }
 
   if (cardsEvent.value.event == 'untoggle-request') {
@@ -202,7 +198,7 @@ const updatePlayerStateHandler = (ev) => {
   }
 
   const from = [...ev.from];
-  from.push(componentName.value);
+  from.push(componentName);
 
   emit('update-player-state', { status: ev.status,
                                 typeState: ev.typeState,
@@ -220,7 +216,7 @@ const updateGameStateHandler = (ev) => {
   }
 
   const from = [...ev.from];
-  from.push(componentName.value);
+  from.push(componentName);
   emit('update-game-state', { status: ev.status,
                               typeState: ev.typeState,
                               gameState: ev.gameState,
@@ -253,7 +249,7 @@ const loadGame = async (reload=false) => {
                                   typeState: TypeStates.GAME.name,
                                   gameState: GameStates.UNDEFINED.name,
                                   data: {action: ''},
-                                  from: [componentName.value] });
+                                  from: [componentName] });
     return { status: resp.status };
   }
 
@@ -264,7 +260,7 @@ const loadGame = async (reload=false) => {
                               typeState: TypeStates.GAME.name,
                               gameState: GameStates[resp.content.game_state].name,
                               data: {action: ''},
-                              from: [componentName.value] });
+                              from: [componentName] });
 
   return { status: true };
 };

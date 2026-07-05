@@ -1,6 +1,6 @@
 <template>
 
-  <BNavbar toggleable="lg" type="light" variant="light">
+  <BNavbar toggleable="lg" variant="light">
     <BNavbarBrand href="#"><h1>pySET</h1></BNavbarBrand>
     <BNavbarNav>
       <BNavItem>GAME ID: {{ gameID }}</BNavItem>
@@ -19,14 +19,12 @@
     </BCollapse>
   </BNavbar>
 
-  <div :v-model="modalGenericMessage">
-    <ModalGenericMessage :modalGenericMessage="modalGenericMessage"
-                         @trigger-updated="updateGenericModalMessage($event)"/>
-  </div>
+  <ModalGenericMessage :modalGenericMessage="modalGenericMessage"
+                       @trigger-updated="updateGenericModalMessage($event)"/>
 
   <div class="mt-2 is-center">
 
-    <b-modal v-model="firstLaunch" title="Create / Join" @hide.prevent hide-footer>
+    <b-modal v-model="firstLaunch" title="Create / Join" no-close-on-backdrop no-close-on-esc no-footer>
       <b-accordion>
         <b-accordion-item title="NEW" visible>
           <BFormInput v-model="gameID" :state="validGameID" type="text" :placeholder="`Game ID (${minIDLength} characters minimum)`"/>
@@ -49,7 +47,7 @@
              :gameState="gameState"
              :playerState="playerState"
 
-             :playersStats="playersStats" 
+             :playersStats="playersStats"
 
              @update-player-state="updatePlayerStateHandler($event)"
              @update-game-state="updateGameStateHandler($event)"/>

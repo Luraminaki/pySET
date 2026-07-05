@@ -14,6 +14,7 @@ natively or via Docker/Rancher.
     - [Python 3](#python-3)
   - [BUILD GUIDE (WebUI - Front)](#build-guide-webui---front)
   - [INSTALL AND START GUIDE (Server - Back)](#install-and-start-guide-server---back)
+  - [TESTING (WebUI - Front)](#testing-webui---front)
   - [DOCKER](#docker)
 
 <!-- /TOC -->
@@ -177,6 +178,32 @@ gunicorn -c gunicorn/dev_app.py
 ```
 
 You can now open your favorite web browser and [start-the-game](http://localhost:10000)
+
+## TESTING (WebUI - Front)
+
+The frontend has a [Playwright](https://playwright.dev/) end-to-end test suite under
+`flask/tests/e2e/`, covering the full gameplay loop (create/join with and without a password,
+add/remove players, start, hint, submit a set, penalties, score history, soft/hard reset). It needs
+the Python backend set up (see [above](#install-and-start-guide-server---back)) since Playwright
+starts both the Nuxt dev server and the backend itself for the run - against `config.test.json` at
+the repo root (same shape as `config.json`, just with a much higher `MAX_SESSIONS` so a full test
+run never hits the session cap), so it never collides with a real game you already have open.
+
+One-time browser download:
+
+```sh
+cd pySET/flask
+npx playwright install chromium
+```
+
+Then, from `pySET/flask`:
+
+```sh
+npm run test:e2e
+```
+
+Use `npm run test:e2e:ui` for Playwright's interactive UI mode while writing or debugging tests, and
+`npm run test:e2e:report` to reopen the HTML report from the last run.
 
 ## DOCKER
 

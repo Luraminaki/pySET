@@ -1,39 +1,43 @@
 <template>
-  <BCardGroup deck class="col-8 pt-2">
-    <BCard title="SET">
-      <SetGrid :gameAuth="props.gameAuth"
-               :gameState="props.gameState"
-               :playerState="props.playerState"
+  <div class="row row-cols-2 col-8 pt-2">
+    <div class="col">
+      <BCard title="SET" class="h-100">
+        <SetGrid :gameAuth="props.gameAuth"
+                 :gameState="props.gameState"
+                 :playerState="props.playerState"
 
-               :playersStats="props.playersStats"
+                 :playersStats="props.playersStats"
 
-               :selectedPlayer="selectedPlayer"
-               :hintedCards="hintedCards"
+                 :selectedPlayer="selectedPlayer"
+                 :hintedCards="hintedCards"
 
-               @update-player-state="updatePlayerStateHandler($event)"
-               @update-game-state="updateGameStateHandler($event)"/>
-    </BCard>
+                 @update-player-state="updatePlayerStateHandler($event)"
+                 @update-game-state="updateGameStateHandler($event)"/>
+      </BCard>
+    </div>
 
-    <BCard :title="playersStats.length <= 1 ? 'PLAYER' : 'PLAYERS'">
-      <PlayerCRUD :gameAuth="props.gameAuth"
-                  :gameState="props.gameState"
-                  :playerState="props.playerState"
+    <div class="col">
+      <BCard :title="playersStats.length <= 1 ? 'PLAYER' : 'PLAYERS'" class="h-100">
+        <PlayerCRUD :gameAuth="props.gameAuth"
+                    :gameState="props.gameState"
+                    :playerState="props.playerState"
 
-                  :playersStats="props.playersStats"
+                    :playersStats="props.playersStats"
 
-                  @update-player-state="updatePlayerStateHandler($event)"/>
+                    @update-player-state="updatePlayerStateHandler($event)"/>
 
-      <div class="mt-3"></div>
+        <div class="mt-3"></div>
 
-      <PlayerScore :gameAuth="props.gameAuth"
-                   :gameState="props.gameState"
-                   :playerState="props.playerState"
+        <PlayerScore :gameAuth="props.gameAuth"
+                     :gameState="props.gameState"
+                     :playerState="props.playerState"
 
-                   :playersStats="props.playersStats"
+                     :playersStats="props.playersStats"
 
-                   @update-player-state="updatePlayerStateHandler($event)"/>
-    </BCard >
-  </BCardGroup>
+                     @update-player-state="updatePlayerStateHandler($event)"/>
+      </BCard>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -51,12 +55,11 @@ const props = defineProps({
   playersStats: { type: Array, required: false, default() { return [] } },
 });
 
-const componentName = ref('');
+const componentName = 'SetGame';
 
 const emit = defineEmits(['update-player-state', 'update-game-state']);
 
-const config = ref({});
-config.value = await useState('config').value.then(r => r);
+const config = ref(await useConfig());
 
 const hintedCards = ref([]);
 const selectedPlayer = ref('');
@@ -86,7 +89,7 @@ const updatePlayerStateHandler = (ev) => {
   }
 
   const from = [...ev.from];
-  from.push(componentName.value);
+  from.push(componentName);
 
   emit('update-player-state', { status: ev.status,
                                 typeState: ev.typeState,
@@ -104,7 +107,7 @@ const updateGameStateHandler = (ev) => {
   }
 
   const from = [...ev.from];
-  from.push(componentName.value);
+  from.push(componentName);
   emit('update-game-state', { status: ev.status,
                               typeState: ev.typeState,
                               gameState: ev.gameState,
