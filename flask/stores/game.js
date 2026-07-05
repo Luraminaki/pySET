@@ -41,20 +41,14 @@ export const useGameStore = defineStore('game', () => {
   }
 
   async function checkBackend() {
-    try {
-      if (config.value.version) {
-        version.value = config.value.version;
-        maxGames.value = config.value.MAX_SESSIONS;
-      }
-      else {
-        throw new Error('Version is undefined');
-      }
-    }
-    catch (error) {
+    if (!config.value.version) {
       version.value = 'Undefined';
-      console.error(`Could not retrieve pySET version from config: ${error}`);
+      console.error('Could not retrieve pySET version from config: version is undefined');
       return { status: false };
     }
+
+    version.value = config.value.version;
+    maxGames.value = config.value.MAX_SESSIONS;
 
     const resp = await getRunningGames(modalGenericMessage);
     if (!resp.status) {
@@ -358,6 +352,7 @@ export const useGameStore = defineStore('game', () => {
       return { status: false, playerIndex: -1 };
     }
 
+    // TODO: Use a toast here
     showMessage('Applying penalty', `${config.value.PENALTY_TIMEOUT_SECONDS}s penalty applied to ${playerName}`);
     await setPlayerState(PlayerStates.UPDATE.name);
 

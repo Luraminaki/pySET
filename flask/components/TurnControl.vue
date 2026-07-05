@@ -73,10 +73,6 @@ const buttonGameStateFlavor = computed(() => {
   return flavor;
 });
 
-// Player list informations (Human / AI) for some automation
-const isAI = (value) => value.is_ai;
-const onlyAIPlayers = computed(() => (store.playersStats.every(isAI)));
-const aiPlayers = computed(() => store.playersStats.filter(playersStats => playersStats.is_ai));
 const humanPlayers = computed(() => store.playersStats.filter(playersStats => !playersStats.is_ai));
 
 // https://stackoverflow.com/questions/59125857/how-to-watch-props-change-with-vue-composition-api-vue-3
