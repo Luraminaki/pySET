@@ -1,14 +1,14 @@
 @echo off
 setlocal EnableDelayedExpansion
 
-SET 7ZEXEC=C:\Program Files\7-Zip\7z.exe
+SET SEVENZIP_EXE=C:\Program Files\7-Zip\7z.exe
 SET REPO=git@github.com:Luraminaki/pySET.git
 SET BRANCH_OR_TAG=main
 SET INSTALL_DIR=pySET
 SET DEST=pySET.zip
 
-IF NOT EXIST "%7ZEXEC%" (
-    echo 7-Zip not found at %7ZEXEC%
+IF NOT EXIST "%SEVENZIP_EXE%" (
+    echo 7-Zip not found at %SEVENZIP_EXE%
     echo Please install 7-Zip or update the script with the correct path.
     exit /b 1
 )
@@ -32,13 +32,13 @@ IF EXIST "flask\dist" rmdir "flask\dist"
 robocopy "flask\.output\public" "flask\dist" /E >nul
 
 DEL %DEST%
-call cmd /C ""%7ZEXEC%" a -tzip %DEST% "README.md""
-call cmd /C ""%7ZEXEC%" a -tzip %DEST% "INSTALL.md""
-call cmd /C ""%7ZEXEC%" a -tzip %DEST% "pyproject.toml""
-call cmd /C ""%7ZEXEC%" a -tzip %DEST% "config.json""
-call cmd /C ""%7ZEXEC%" a -tzip %DEST% ".env.example""
-call cmd /C ""%7ZEXEC%" a -tzip %DEST% "pyset/*""
-call cmd /C ""%7ZEXEC%" a -tzip %DEST% "gunicorn/*.py""
-call cmd /C ""%7ZEXEC%" a -tzip %DEST% "flask/dist/*""
+call cmd /C ""%SEVENZIP_EXE%" a -tzip %DEST% "README.md""
+call cmd /C ""%SEVENZIP_EXE%" a -tzip %DEST% "INSTALL.md""
+call cmd /C ""%SEVENZIP_EXE%" a -tzip %DEST% "pyproject.toml""
+call cmd /C ""%SEVENZIP_EXE%" a -tzip %DEST% "config.json""
+call cmd /C ""%SEVENZIP_EXE%" a -tzip %DEST% ".env.example""
+call cmd /C ""%SEVENZIP_EXE%" a -tzip %DEST% "pyset/*""
+call cmd /C ""%SEVENZIP_EXE%" a -tzip %DEST% "gunicorn/*.py""
+call cmd /C ""%SEVENZIP_EXE%" a -tzip %DEST% "flask/dist/*""
 
 echo Done !
