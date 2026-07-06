@@ -17,7 +17,7 @@ def client(tmp_path, monkeypatch) -> FlaskClient:
         json.dumps(
             {
                 'service_id': 'pySET-itest',
-                'version': '0.2.0',
+                'version': '0.3.0',
                 'MAX_SESSIONS': 5,
                 'SESSION_NAME_MAX_CHARS': 36,
                 'SESSION_TTL_SECONDS': 1800,

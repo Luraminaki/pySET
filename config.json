@@ -1,6 +1,6 @@
 {
     "service_id": "pySET",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "app_version": "0.1.0",
     "logging_level": "INFO",
     "MAX_SESSIONS": 5,
