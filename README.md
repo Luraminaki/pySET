@@ -6,18 +6,17 @@ Feel free to check the [game rules](https://en.wikipedia.org/wiki/Set_(card_game
 
 You will need to know (among other few things) how to use the terminal command prompt in order to build + install + run this game on your own computer. If not, you can directly skip to [this section](#tldr).
 
-## VERSIONS
+## VERSION
 
-- 0.1.0-alpha: First release
-- 0.2.0-alpha: Multiple Game Sessions
-- 0.3.0-alpha: Room visibility & password protection, full frontend/backend modernization (Nuxt 4, Pinia, Pydantic) and a Playwright e2e test suite
+The current version lives in [pyproject.toml](pyproject.toml) and is read from package
+metadata at runtime. See [CHANGELOG.md](CHANGELOG.md) for the full version history.
 
 ## TABLE OF CONTENT
 
 <!-- TOC -->
 
 - [SET](#set)
-  - [VERSIONS](#versions)
+  - [VERSION](#version)
   - [TABLE OF CONTENT](#table-of-content)
   - [TL;DR](#tldr)
   - [INSTALLATION](#installation)
