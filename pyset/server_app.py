@@ -45,11 +45,9 @@ def create_app(config: str = 'config.json', scheme: str = 'https://', subdomain:
 
     dist_path = Path(__file__).absolute().parent.parent / 'flask' / 'dist'
     if not dist_path.exists():
-        raise Exception(f"WebApp generation failed or was not initiated -- Sources not found: {dist_path.as_posix()}")
+        raise Exception(f'WebApp generation failed or was not initiated -- Sources not found: {dist_path.as_posix()}')
 
-    app = Flask(
-        __name__, static_folder=dist_path.as_posix(), template_folder=dist_path.as_posix(), static_url_path='/'
-    )
+    app = Flask(__name__, static_folder=dist_path.as_posix(), template_folder=dist_path.as_posix(), static_url_path='/')
     app.secret_key = os.urandom(32).hex()
     app.register_error_handler(404, TemplateView.not_found)
 
