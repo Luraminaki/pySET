@@ -24,16 +24,6 @@ call npm install
 call npm run generate
 cd ..
 
-REM `npm run generate` leaves flask\dist as a symlink/junction to flask\.output\public (see
-REM pyset/server_app.py, which serves the app from flask\dist). 7-Zip's handling of NTFS
-REM reparse points is unreliable, and the link itself is a machine-specific absolute path, so
-REM re-materialize it as a real directory before zipping rather than trusting 7z to follow it.
-REM Plain `rmdir` only removes an empty directory or the link itself; /s /q is needed so a
-REM re-run of this script (where flask\dist is already a real, populated directory from a
-REM previous run) also gets wiped clean instead of merging stale files into the new build.
-IF EXIST "flask\dist" rmdir /s /q "flask\dist"
-robocopy "flask\.output\public" "flask\dist" /E >nul
-
 DEL %DEST%
 call cmd /C ""%SEVENZIP_EXE%" a -tzip %DEST% "README.md""
 call cmd /C ""%SEVENZIP_EXE%" a -tzip %DEST% "INSTALL.md""

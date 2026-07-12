@@ -11,9 +11,9 @@ RUN npm run generate
 FROM python:3.12-bullseye
 ENV PYTHONUNBUFFERED 1
 
-# server_app.py serves the app from flask/dist (see pyset/server_app.py); copy .output/public's
-# real contents straight into it rather than .output/server (Nitro's unused Node server bundle).
-COPY --from=buildfront ./flask/.output/public /flask/dist/
+# `npm run generate` writes the built site straight to flask/dist (see nuxt.config.ts's
+# nitro.output.publicDir and pyset/server_app.py, which serves the app from flask/dist).
+COPY --from=buildfront ./flask/dist /flask/dist/
 COPY ./gunicorn /gunicorn/
 COPY ./pyset /pyset/
 COPY config.json ./

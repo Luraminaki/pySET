@@ -28,7 +28,13 @@ export default defineConfig({
       // full test run never hits the session cap. reuseExistingServer is deliberately off here:
       // silently reusing a real dev backend (config.json, MAX_SESSIONS=5) would misconfigure the
       // whole suite without any visible error.
-      command: `"${pythonBin}" -m pyset.server_app -c config.test.json`,
+      //
+      // server_app.py refuses to boot unless flask/dist exists, even though these tests exercise
+      // the Vite dev server below (not Flask's static serving) -- so a clean checkout that never
+      // ran `npm run generate` would otherwise fail here before a single test runs. The mkdirSync
+      // call is a no-op if flask/dist already exists (e.g. a real build), and an empty directory
+      // is all server_app.py's existence check needs.
+      command: `node -e "require('fs').mkdirSync('flask/dist',{recursive:true})" && "${pythonBin}" -m pyset.server_app -c config.test.json`,
       cwd: '..',
       url: 'http://localhost:10000/api/app/get_config/',
       reuseExistingServer: false,
