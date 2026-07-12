@@ -114,9 +114,9 @@ export const useGameStore = defineStore('game', () => {
   // direct assignment. The old handlers each did `await sleep(300)` here ("Mandatory to avoid
   // VUE crashes") -- that guarded against races in the old 3-4-level prop-drilling + bubbled-
   // watcher architecture, which no longer exists now that everything reads/writes the store
-  // directly. Verified removable: no console/Vue errors across dozens of runs (dev server and a
-  // production build), including a dedicated stress test for the exact "quick double penalty"
-  // and "fast submit" sequences the delay used to paper over.
+  // directly. Manually exercised the "quick double penalty" / "fast submit" sequences the delay
+  // used to paper over (dev server and a production build) with no console/Vue errors, but this
+  // isn't backed by a committed regression test -- worth adding one if this ever regresses.
   async function setPlayerState(newPlayerState) {
     if (newPlayerState == PlayerStates.UPDATE.name) {
       await refreshPlayersStats();

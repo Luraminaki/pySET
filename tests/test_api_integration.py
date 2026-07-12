@@ -17,7 +17,6 @@ def client(tmp_path, monkeypatch) -> FlaskClient:
         json.dumps(
             {
                 'service_id': 'pySET-itest',
-                'version': '0.3.0',
                 'MAX_SESSIONS': 5,
                 'SESSION_NAME_MAX_CHARS': 36,
                 'SESSION_TTL_SECONDS': 1800,
@@ -30,7 +29,13 @@ def client(tmp_path, monkeypatch) -> FlaskClient:
         )
     )
 
-    app = create_app(str(config_path), scheme='http://', subdomain='localhost')
+    # These tests exercise the JSON API only, not the built frontend -- a placeholder dist
+    # directory keeps the suite independent of `npm run generate` ever having been run.
+    dist_path = tmp_path / 'dist'
+    dist_path.mkdir()
+    (dist_path / 'index.html').write_text('<html></html>')
+
+    app = create_app(str(config_path), scheme='http://', subdomain='localhost', dist_path=str(dist_path))
     app.config.update(TESTING=True)
     return app.test_client()
 

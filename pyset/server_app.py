@@ -22,7 +22,9 @@ from pyset.view_model_app import ViewModelApp as ViewModel
 logger = logging.getLogger()
 
 
-def create_app(config: str = 'config.json', scheme: str = 'https://', subdomain: str = 'localhost') -> Flask:
+def create_app(
+    config: str = 'config.json', scheme: str = 'https://', subdomain: str = 'localhost', dist_path: str | None = None
+) -> Flask:
     """Builds and configures the Flask application.
 
     See :class:`pyset.modules.misc.models.AppConfig` for how the admin secret can be supplied via the
@@ -32,6 +34,9 @@ def create_app(config: str = 'config.json', scheme: str = 'https://', subdomain:
         config (str, optional): Path to the JSON configuration file. Defaults to 'config.json'.
         scheme (str, optional): URL scheme (e.g. 'http://'). Defaults to 'https://'.
         subdomain (str, optional): Subdomain/host the app is served from. Defaults to 'localhost'.
+        dist_path (str, optional): Path to the built frontend (``flask/dist``). Defaults to the
+            real build output next to this repo -- override in tests that don't need the actual
+            frontend build.
 
     Returns:
         Flask: The configured Flask application.
@@ -43,11 +48,20 @@ def create_app(config: str = 'config.json', scheme: str = 'https://', subdomain:
     configure_launcher_logging(logger, log_file_stem=conf.service_id)
     logger.setLevel(conf.logging_level)
 
-    dist_path = Path(__file__).absolute().parent.parent / 'flask' / 'dist'
-    if not dist_path.exists():
-        raise Exception(f'WebApp generation failed or was not initiated -- Sources not found: {dist_path.as_posix()}')
+    resolved_dist_path = (
+        Path(dist_path).expanduser() if dist_path else Path(__file__).absolute().parent.parent / 'flask' / 'dist'
+    )
+    if not resolved_dist_path.exists():
+        raise Exception(
+            f'WebApp generation failed or was not initiated -- Sources not found: {resolved_dist_path.as_posix()}'
+        )
 
-    app = Flask(__name__, static_folder=dist_path.as_posix(), template_folder=dist_path.as_posix(), static_url_path='/')
+    app = Flask(
+        __name__,
+        static_folder=resolved_dist_path.as_posix(),
+        template_folder=resolved_dist_path.as_posix(),
+        static_url_path='/',
+    )
     app.secret_key = os.urandom(32).hex()
     app.register_error_handler(404, TemplateView.not_found)
 

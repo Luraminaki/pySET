@@ -5,6 +5,8 @@
 @rules: https://en.wikipedia.org/wiki/Set_(card_game)#Games
 """
 
+import importlib.metadata
+
 from pydantic import AliasChoices, BaseModel, Field
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
 
@@ -33,7 +35,9 @@ class AppConfig(BaseSettings):
     model_config = SettingsConfigDict(populate_by_name=True, env_file='.env', env_file_encoding='utf-8', extra='ignore')
 
     service_id: str = 'pySET'
-    version: str = '0.0.0'
+    # Single source of truth is pyproject.toml's [project] version -- config.json should not
+    # (and no longer does) carry its own copy that can drift out of sync on a version bump.
+    version: str = Field(default_factory=lambda: importlib.metadata.version('pyset'))
     app_version: str = '0.0.0'
     logging_level: int | str = 'INFO'
     max_sessions: int = Field(default=10, alias='MAX_SESSIONS')
