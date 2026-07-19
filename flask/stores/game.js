@@ -33,6 +33,39 @@ export const useGameStore = defineStore('game', () => {
     modalGenericMessage.value = { triggerModal: false, modalTitle: '', modalMessage: '' };
   }
 
+  const THEME_STORAGE_KEY = 'pyset-theme';
+  const theme = ref('light');
+
+  function applyTheme(newTheme) {
+    theme.value = newTheme;
+    document.documentElement.setAttribute('data-bs-theme', newTheme);
+  }
+
+  // Defaults to the OS/browser preference. Until the user explicitly toggles (see toggleTheme),
+  // no choice is stored, so the app keeps following the system preference live -- e.g. the OS
+  // switching to dark mode at sunset -- rather than freezing on whatever it resolved to at load.
+  function initTheme() {
+    const stored = localStorage.getItem(THEME_STORAGE_KEY);
+    if (stored) {
+      applyTheme(stored);
+      return;
+    }
+
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    applyTheme(media.matches ? 'dark' : 'light');
+    media.addEventListener('change', (event) => {
+      if (!localStorage.getItem(THEME_STORAGE_KEY)) {
+        applyTheme(event.matches ? 'dark' : 'light');
+      }
+    });
+  }
+
+  function toggleTheme() {
+    const newTheme = theme.value == 'dark' ? 'light' : 'dark';
+    applyTheme(newTheme);
+    localStorage.setItem(THEME_STORAGE_KEY, newTheme);
+  }
+
   const games = ref([]);
   const maxGames = ref(10);
 
@@ -366,6 +399,9 @@ export const useGameStore = defineStore('game', () => {
     modalGenericMessage,
     showMessage,
     clearMessage,
+    theme,
+    initTheme,
+    toggleTheme,
     games,
     maxGames,
     loadConfig,

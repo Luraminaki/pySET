@@ -1,6 +1,11 @@
 <template>
 
   <BNavForm class="d-flex">
+    <BButton @click="store.toggleTheme()"
+             class="btn btn-outline-light" type="button">
+      <i :class="store.theme == 'dark' ? 'mdi mdi-weather-sunny' : 'mdi mdi-weather-night'" aria-hidden="true"></i>
+      {{ store.theme == 'dark' ? 'LIGHT' : 'DARK' }}
+    </BButton>
     <BButton @click="getHelp()"
              class="btn btn-outline-light" type="button">
       <i class="mdi mdi-help-circle" aria-hidden="true"></i>

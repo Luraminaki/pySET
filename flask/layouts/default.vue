@@ -1,6 +1,6 @@
 <template>
 
-  <BNavbar toggleable="lg" variant="light">
+  <BNavbar toggleable="lg" :variant="store.theme">
     <BNavbarBrand href="#"><h1>pySET</h1></BNavbarBrand>
     <BNavbarNav>
       <BNavItem>GAME ID: {{ store.gameID }}</BNavItem>
@@ -69,6 +69,7 @@ const store = useGameStore();
 // ##################
 
 onMounted(async () => {
+  store.initTheme();
   await store.loadConfig();
   await store.checkBackend();
 });

@@ -6,6 +6,25 @@ Feel free to check the [game rules](https://en.wikipedia.org/wiki/Set_(card_game
 
 You will need to know (among other few things) how to use the terminal command prompt in order to build + install + run this game on your own computer. If not, you can directly skip to [this section](#tldr).
 
+## SCREENSHOTS
+
+Create a game (optionally password-protected), or join one already in progress:
+
+![Create or join a game](screenshots/01-create-join.png)
+
+Find a SET among the cards on the grid while everyone's stats (color, valid/failed submits,
+average time) update live -- stuck? Ask for a hint. Light or dark, whichever you prefer:
+
+![Mid-game grid and player stats, dark mode](screenshots/02-gameplay.png)
+
+Check "SHOW HISTORY" on any player to replay every SET they've found so far:
+
+![A player's SET history](screenshots/03-history.png)
+
+Once neither the grid nor the draw pile has a SET left to find, the game calls it:
+
+![Game over](screenshots/04-game-over.png)
+
 ## VERSION
 
 The current version lives in [pyproject.toml](pyproject.toml) and is read from package
@@ -16,6 +35,7 @@ metadata at runtime. See [CHANGELOG.md](CHANGELOG.md) for the full version histo
 <!-- TOC -->
 
 - [SET](#set)
+  - [SCREENSHOTS](#screenshots)
   - [VERSION](#version)
   - [TABLE OF CONTENT](#table-of-content)
   - [TL;DR](#tldr)
